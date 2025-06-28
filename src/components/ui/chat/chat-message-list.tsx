@@ -7,7 +7,7 @@ interface ChatMessageListProps extends React.HTMLAttributes<HTMLDivElement> {
   smooth?: boolean;
 }
 
-const ChatMessageList = React.forwardRef<HTMLDivElement, ChatMessageListProps>(
+const ChatMessageList: React.FC<ChatMessageListProps> = 
   ({ className, children, smooth = false, ...props }) => {
     const {
       scrollRef,
@@ -43,8 +43,7 @@ const ChatMessageList = React.forwardRef<HTMLDivElement, ChatMessageListProps>(
         )}
       </div>
     );
-  }
-);
+  };
 
 ChatMessageList.displayName = "ChatMessageList";
 

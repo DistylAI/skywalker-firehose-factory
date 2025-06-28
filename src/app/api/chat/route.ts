@@ -6,7 +6,13 @@ import assistantAgent from '@/agents/assistantAgent';
 export const runtime = 'edge';
 
 export async function POST(req: NextRequest) {
-  const { messages } = await req.json();
+  const { messages, data } = await req.json();
+
+  // Extract scenario passed from client (if any)
+  const scenario = data?.scenario ?? "default";
+
+  // eslint-disable-next-line no-console
+  console.log("Chat scenario:", scenario);
 
   const historyItems = Array.isArray(messages)
     ? messages
@@ -17,7 +23,7 @@ export async function POST(req: NextRequest) {
         })
     : [];
 
-  // The assistantAgent already encapsulates the hand-off logic and specialized agents.
+  // TODO: Use scenario to switch between different agents if needed. For now, default to assistantAgent.
   const agent = assistantAgent;
 
   const streamed = await run(agent, historyItems as any, { stream: true });

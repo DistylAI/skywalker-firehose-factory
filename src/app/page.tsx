@@ -12,6 +12,13 @@ import { ChatMessageList } from "@/components/ui/chat/chat-message-list";
 import { ChatBubble, ChatBubbleMessage } from "@/components/ui/chat/chat-bubble";
 import { ChatInput } from "@/components/ui/chat/chat-input";
 import { cn } from "@/lib/utils";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 
 enum Tab {
   Chat = 'chat',
@@ -28,8 +35,26 @@ export default function Home() {
   // Ref to re-focus the input after submit
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
+  // Scenario selection state
+  const scenarios = [
+    { label: "Default", value: "default" },
+    { label: "Assistant", value: "assistant" },
+    { label: "Cat Facts", value: "cat" },
+    { label: "Jokes", value: "joke" },
+  ];
+
+  const [scenario, setScenario] = useState<string>(scenarios[0].value);
+
   const handleSubmitAndFocus = (e: any) => {
-    handleSubmit(e);
+    handleSubmit(
+      e,
+      {
+        data: {
+          scenario,
+        },
+      },
+    );
+
     // Using a timeout ensures focus after UI updates
     setTimeout(() => inputRef.current?.focus(), 0);
   };
@@ -40,7 +65,7 @@ export default function Home() {
       <header className="sticky top-0 z-10 border-b border-border bg-background px-6 py-4">
         <h1 className="text-xl font-semibold text-foreground">AI Chat</h1>
 
-        {/* Tabs */}
+        {/* Tabs & Scenario selector */}
         <div className="mt-4 flex gap-8 text-sm font-medium">
           <button
             className={cn(
@@ -64,6 +89,29 @@ export default function Home() {
           >
             Documentation
           </button>
+        </div>
+
+        {/* Scenario selector */}
+        <div className="mt-4 flex flex-col gap-1 w-48">
+          <label htmlFor="scenario" className="text-sm font-medium text-foreground">
+            Scenario
+          </label>
+          <Select
+            value={scenario}
+            onValueChange={(v) => setScenario(v)}
+            name="scenario"
+          >
+            <SelectTrigger id="scenario" aria-label="Scenario">
+              <SelectValue placeholder="Select scenario" />
+            </SelectTrigger>
+            <SelectContent>
+              {scenarios.map((s) => (
+                <SelectItem key={s.value} value={s.value}>
+                  {s.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </header>
 

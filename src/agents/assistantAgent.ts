@@ -1,11 +1,11 @@
 import { Agent } from '@openai/agents';
-import catAgent from './catAgent';
+import ordersAgent from './ordersAgent';
 import jokeAgent from './jokeAgent';
 import config from './definitions/assistantAgent.yaml';
 
 const assistantAgent = Agent.create({
   ...config,
-  handoffs: [catAgent, jokeAgent],
+  handoffs: [ordersAgent, jokeAgent],
 });
 
 export default assistantAgent; 

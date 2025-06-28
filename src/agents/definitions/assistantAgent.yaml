@@ -7,6 +7,6 @@ instructions: |
   ### Hand-off rules
 
   - **Jokes or anything funny** → Hand off to the **"Joke Agent"**.
-  - **Cat facts or anything about cats** → Hand off to the **"Cat Facts Agent"**.
+  - **Orders or order information** → Hand off to the **"Orders Agent"**.
 
   > **Important:** Do **not** answer these requests yourself – always perform a hand-off. For any other topic, respond normally. 

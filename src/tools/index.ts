@@ -1,8 +1,8 @@
-import getCatFact, { getCatFactName } from './getCatFact';
+import getOrders, { getOrdersName } from './getOrders';
 import getJoke, { getJokeName } from './getJoke';
 import { Tool } from '@openai/agents';
 
 export const toolRegistry: Record<string, Tool<any>> = {
-  [getCatFactName]: getCatFact,
+  [getOrdersName]: getOrders,
   [getJokeName]: getJoke,
 }; 

@@ -5,7 +5,7 @@ import type React from 'react';
 import { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import assistantConfig from '@/agents/definitions/assistantAgent.yaml';
-import catConfig from '@/agents/definitions/catAgent.yaml';
+import ordersConfig from '@/agents/definitions/ordersAgent.yaml';
 import jokeConfig from '@/agents/definitions/jokeAgent.yaml';
 import { Button } from "@/components/ui/button";
 import { ArrowUp, ChevronDown } from "lucide-react";
@@ -33,7 +33,7 @@ export default function Home() {
   const scenarios = [
     { label: "Default", value: "default" },
     { label: "Assistant", value: "assistant" },
-    { label: "Cat Facts", value: "cat" },
+    { label: "Orders", value: "orders" },
     { label: "Jokes", value: "joke" },
   ];
 
@@ -178,7 +178,7 @@ export default function Home() {
 function Documentation() {
   const docs = [
     { title: 'Assistant', data: assistantConfig },
-    { title: 'Cat Facts Agent', data: catConfig },
+    { title: 'Orders Agent', data: ordersConfig },
     { title: 'Joke Agent', data: jokeConfig },
   ];
 

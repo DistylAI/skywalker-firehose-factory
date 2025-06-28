@@ -1,5 +1,5 @@
-import '../../../openai-polyfill';
-import { Agent, run } from '@openai/agents';
+import './openai-polyfill';
+import { Agent, run, user as userMessage, assistant as assistantMessage } from '@openai/agents';
 import { NextRequest } from 'next/server';
 
 export const runtime = 'edge';
@@ -7,18 +7,21 @@ export const runtime = 'edge';
 export async function POST(req: NextRequest) {
   const { messages } = await req.json();
 
-  // Grab latest user text (AI SDK message format)
-  const lastUserMessage = Array.isArray(messages)
-    ? [...messages].reverse().find((m: any) => m.role === 'user')?.parts?.[0]?.text ?? ''
-    : '';
+  const historyItems = Array.isArray(messages)
+    ? messages
+        .filter((m: any) => m?.parts?.[0]?.text)
+        .map((m: any) => {
+          const text = m.parts[0].text as string;
+          return m.role === 'user' ? userMessage(text) : assistantMessage(text);
+        })
+    : [];
 
   const agent = new Agent({
     name: 'Assistant',
     instructions: 'You are a helpful assistant.',
   });
 
-  // Streamed run
-  const streamed = await run(agent, lastUserMessage, { stream: true });
+  const streamed = await run(agent, historyItems as any, { stream: true });
 
   const encoder = new TextEncoder();
   const stream = new ReadableStream({
@@ -33,7 +36,6 @@ export async function POST(req: NextRequest) {
             controller.enqueue(encoder.encode(token));
           }
         }
-        // done - nothing for text protocol
       } catch (e) {
         controller.error(e);
       } finally {

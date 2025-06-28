@@ -5,28 +5,37 @@ import assistantAgent from '@/agents/assistantAgent';
 
 export const runtime = 'edge';
 
-export async function POST(req: NextRequest) {
-  const { messages, data } = await req.json();
+interface IncomingMessage {
+  id: string;
+  role: 'user' | 'assistant' | string;
+  parts: Array<{ type: string; text?: string }>;
+}
+
+interface ChatRequestBody {
+  messages?: IncomingMessage[];
+  data?: Record<string, unknown>;
+}
+
+export async function POST(req: NextRequest): Promise<Response> {
+  const { messages = [], data }: ChatRequestBody = await req.json();
 
   // Extract scenario passed from client (if any)
-  const scenario = data?.scenario ?? "default";
+  const scenario = (data?.scenario as string) ?? 'default';
 
   // eslint-disable-next-line no-console
-  console.log("Chat scenario:", scenario);
+  console.log('Chat scenario:', scenario);
 
-  const historyItems = Array.isArray(messages)
-    ? messages
-        .filter((m: any) => m?.parts?.[0]?.text)
-        .map((m: any) => {
-          const text = m.parts[0].text as string;
-          return m.role === 'user' ? userMessage(text) : assistantMessage(text);
-        })
-    : [];
+  const historyItems = (messages as IncomingMessage[])
+    .filter((m) => m?.parts?.[0]?.text)
+    .map((m) => {
+      const text = m.parts[0].text as string;
+      return m.role === 'user' ? userMessage(text) : assistantMessage(text);
+    });
 
   // TODO: Use scenario to switch between different agents if needed. For now, default to assistantAgent.
   const agent = assistantAgent;
 
-  const streamed = await run(agent, historyItems as any, { stream: true });
+  const streamed = await run(agent, historyItems, { stream: true });
 
   const encoder = new TextEncoder();
   const stream = new ReadableStream({

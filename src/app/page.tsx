@@ -1,6 +1,7 @@
 'use client';
 
 import { useChat } from '@ai-sdk/react';
+import type React from 'react';
 import { useState, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import assistantConfig from '@/agents/definitions/assistantAgent.yaml';
@@ -45,7 +46,7 @@ export default function Home() {
 
   const [scenario, setScenario] = useState<string>(scenarios[0].value);
 
-  const handleSubmitAndFocus = (e: any) => {
+  const handleSubmitAndFocus = (e: React.SyntheticEvent) => {
     handleSubmit(
       e,
       {

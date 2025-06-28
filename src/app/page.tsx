@@ -2,24 +2,17 @@
 
 import { useChat } from '@ai-sdk/react';
 import type React from 'react';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import assistantConfig from '@/agents/definitions/assistantAgent.yaml';
 import catConfig from '@/agents/definitions/catAgent.yaml';
 import jokeConfig from '@/agents/definitions/jokeAgent.yaml';
 import { Button } from "@/components/ui/button";
-import { ArrowUp } from "lucide-react";
+import { ArrowUp, ChevronDown } from "lucide-react";
 import { ChatMessageList } from "@/components/ui/chat/chat-message-list";
 import { ChatBubble, ChatBubbleMessage } from "@/components/ui/chat/chat-bubble";
 import { ChatInput } from "@/components/ui/chat/chat-input";
 import { cn } from "@/lib/utils";
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from "@/components/ui/select";
 
 enum Tab {
   Chat = 'chat',
@@ -64,7 +57,7 @@ export default function Home() {
     <main className="flex flex-col h-screen max-w-4xl mx-auto bg-background">
       {/* Header */}
       <header className="sticky top-0 z-10 border-b border-border bg-background px-6 py-4">
-        <h1 className="text-xl font-semibold text-foreground">AI Chat</h1>
+        <h1 className="text-xl font-semibold text-foreground">Skywalker Firehose Factory</h1>
 
         {/* Tabs & Scenario selector */}
         <div className="mt-4 flex gap-8 text-sm font-medium">
@@ -92,28 +85,30 @@ export default function Home() {
           </button>
         </div>
 
-        {/* Scenario selector */}
-        <div className="mt-4 flex flex-col gap-1 w-48">
-          <label htmlFor="scenario" className="text-sm font-medium text-foreground">
-            Scenario
-          </label>
-          <Select
-            value={scenario}
-            onValueChange={(v) => setScenario(v)}
-            name="scenario"
-          >
-            <SelectTrigger id="scenario" aria-label="Scenario">
-              <SelectValue placeholder="Select scenario" />
-            </SelectTrigger>
-            <SelectContent>
-              {scenarios.map((s) => (
-                <SelectItem key={s.value} value={s.value}>
-                  {s.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        {/* Scenario selector (only visible on Chat tab) */}
+        {activeTab === Tab.Chat && (
+          <div className="mt-4 flex flex-col gap-1 w-48">
+            <label htmlFor="scenario" className="text-sm font-medium text-foreground">
+              Scenario
+            </label>
+            <div className="relative">
+              <select
+                id="scenario"
+                name="scenario"
+                value={scenario}
+                onChange={(e) => setScenario(e.target.value)}
+                className="appearance-none w-full border border-border rounded px-3 py-2 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary pr-8"
+              >
+                {scenarios.map((s) => (
+                  <option key={s.value} value={s.value}>
+                    {s.label}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="absolute pointer-events-none right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            </div>
+          </div>
+        )}
       </header>
 
       {/* Tabs */}
@@ -187,11 +182,30 @@ function Documentation() {
     { title: 'Joke Agent', data: jokeConfig },
   ];
 
+  const [tools, setTools] = useState<Array<{
+    name: string;
+    description?: string;
+    parameters?: any;
+    code?: string | null;
+  }>>([]);
+
+  useEffect(() => {
+    fetch('/api/docs/tools')
+      .then((res) => res.json())
+      .then((data) => setTools(data))
+      .catch(() => {
+        /* noop */
+      });
+  }, []);
+
   return (
     <div className="flex-1 overflow-y-auto space-y-6">
       {docs.map(({ title, data }) => {
-        const { instructions, handoffDescription, tools, ...rest } =
+        const { instructions, handoffDescription, tools: agentTools, ...rest } =
           data as Record<string, unknown>;
+
+        const instructionsStr = instructions ? String(instructions) : '';
+        const handoffStr = handoffDescription ? String(handoffDescription) : '';
 
         return (
           <div
@@ -201,25 +215,25 @@ function Documentation() {
             <h2 className="text-xl font-semibold mb-4">{title}</h2>
 
             {/* Instructions (Markdown) */}
-            {instructions && (
+            {instructionsStr && (
               <div className="mb-4 prose max-w-none">
-                <ReactMarkdown>{instructions}</ReactMarkdown>
+                <ReactMarkdown>{instructionsStr}</ReactMarkdown>
               </div>
             )}
 
             {/* Handoff description (Markdown) */}
-            {handoffDescription && (
+            {handoffStr && (
               <div className="mb-4 prose max-w-none">
-                <ReactMarkdown>{handoffDescription}</ReactMarkdown>
+                <ReactMarkdown>{handoffStr}</ReactMarkdown>
               </div>
             )}
 
             {/* Tools list */}
-            {Array.isArray(tools) && tools.length > 0 && (
+            {Array.isArray(agentTools) && agentTools.length > 0 && (
               <div className="mb-4">
                 <h3 className="font-medium mb-1">Tools</h3>
                 <ul className="list-disc list-inside">
-                  {tools.map((t: string) => (
+                  {agentTools.map((t: string) => (
                     <li key={t}>{t}</li>
                   ))}
                 </ul>
@@ -235,6 +249,39 @@ function Documentation() {
           </div>
         );
       })}
+
+      {/* Tools Documentation */}
+      {tools.length > 0 && (
+        <div className="space-y-6">
+          {tools.map((tool) => (
+            <div
+              key={tool.name}
+              className="border border-border rounded-lg p-6 bg-card"
+            >
+              <h2 className="text-xl font-semibold mb-4">Tool: {tool.name}</h2>
+              {tool.description && (
+                <p className="mb-4 text-muted-foreground">{tool.description}</p>
+              )}
+              {tool.parameters && (
+                <div className="mb-4">
+                  <h3 className="font-medium mb-1">Parameters (JSON Schema)</h3>
+                  <pre className="whitespace-pre-wrap bg-white p-3 rounded text-sm overflow-x-auto text-gray-800">
+                    {JSON.stringify(tool.parameters, null, 2)}
+                  </pre>
+                </div>
+              )}
+              {tool.code && (
+                <div className="mb-4">
+                  <h3 className="font-medium mb-1">Execution Function Source</h3>
+                  <pre className="whitespace-pre-wrap bg-white p-3 rounded text-sm overflow-x-auto text-gray-800">
+                    {tool.code}
+                  </pre>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

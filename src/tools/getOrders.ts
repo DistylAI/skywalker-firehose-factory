@@ -7,7 +7,21 @@ export const getOrdersName = 'get_orders';
 const getOrders = tool({
   name: getOrdersName,
   description: 'Return a JSON object containing recent orders.',
-  parameters: z.object({}),
+  parameters: z
+    .object({
+      context: z.object({
+        scenario: z
+          .enum([
+            'default',
+            'single',
+            'multiple',
+            'cancelled',
+            'returned',
+            'intranit',
+          ])
+          .default('default'),
+      }),
+    }),
   execute: getOrdersExecute,
 });
 

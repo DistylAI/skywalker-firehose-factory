@@ -1,6 +1,10 @@
-export default async function getOrdersExecute({ scenario: paramScenario }: { scenario?: string } = {}) {
-  // Determine the scenario that was set earlier in the request lifecycle.
-  const scenario: string = paramScenario ?? (globalThis as any).currentScenario ?? 'default';
+export default async function getOrdersExecute(
+  {
+    context,
+  }: { context?: { scenario?: string } } = {},
+) {
+  const scenario: string =
+    context?.scenario ?? (globalThis as any).currentScenario ?? 'default';
 
   let orders;
 

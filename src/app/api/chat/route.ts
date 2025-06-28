@@ -25,6 +25,11 @@ export async function POST(req: NextRequest): Promise<Response> {
   // eslint-disable-next-line no-console
   console.log('Chat scenario:', scenario);
 
+  // Store scenario globally so that downstream tool executions can adapt their response.
+  // NOTE: This is a simple demo approach and is **not** suitable for production due to potential
+  // cross-request data leaks. Prefer a proper per-request context/AsyncLocalStorage in real apps.
+  (globalThis as any).currentScenario = scenario;
+
   const historyItems = (messages as IncomingMessage[])
     .filter((m) => m?.parts?.[0]?.text)
     .map((m) => {

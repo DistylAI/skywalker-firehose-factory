@@ -31,10 +31,11 @@ export default function Home() {
 
   // Scenario selection state
   const scenarios = [
-    { label: "Default", value: "default" },
-    { label: "Assistant", value: "assistant" },
-    { label: "Orders", value: "orders" },
-    { label: "Jokes", value: "joke" },
+    { label: "Cancelled Orders", value: "cancelled" },
+    { label: "Multiple Item Orders", value: "multiple" },
+    { label: "Single Item Orders", value: "single" },
+    { label: "In-Transit Orders", value: "intranit" },
+    { label: "Returned Orders", value: "returned" },
   ];
 
   const [scenario, setScenario] = useState<string>(scenarios[0].value);

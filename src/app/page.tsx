@@ -125,20 +125,28 @@ export default function Home() {
                 <p>Start a conversation...</p>
               </div>
             ) : (
-              messages.map((m) => (
-                <ChatBubble
-                  key={m.id}
-                  variant={m.role === 'user' ? 'sent' : 'received'}
-                >
-                  <ChatBubbleMessage variant={m.role === 'user' ? 'sent' : 'received'}>
-                    {m.parts
-                      .filter((p) => p.type === 'text')
-                      .map((p, i) => (
-                        <span key={i}>{(p as { text: string }).text}</span>
-                      ))}
-                  </ChatBubbleMessage>
-                </ChatBubble>
-              ))
+              <>
+                {messages.map((m) => (
+                  <ChatBubble
+                    key={m.id}
+                    variant={m.role === 'user' ? 'sent' : 'received'}
+                  >
+                    <ChatBubbleMessage variant={m.role === 'user' ? 'sent' : 'received'}>
+                      {m.parts
+                        .filter((p) => p.type === 'text')
+                        .map((p, i) => (
+                          <span key={i}>{(p as { text: string }).text}</span>
+                        ))}
+                    </ChatBubbleMessage>
+                  </ChatBubble>
+                ))}
+                {/* Show loading indicator when waiting for assistant response */}
+                {status !== 'ready' && messages[messages.length - 1]?.role === 'user' && (
+                  <ChatBubble variant="received">
+                    <ChatBubbleMessage variant="received" isLoading={true} />
+                  </ChatBubble>
+                )}
+              </>
             )}
           </ChatMessageList>
 

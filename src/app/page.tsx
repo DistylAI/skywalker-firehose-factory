@@ -2,6 +2,10 @@
 
 import { useChat } from '@ai-sdk/react';
 import { useState } from 'react';
+import * as YAMLlib from 'yaml';
+import assistantConfig from '@/agents/definitions/assistantAgent.yaml';
+import catConfig from '@/agents/definitions/catAgent.yaml';
+import jokeConfig from '@/agents/definitions/jokeAgent.yaml';
 
 enum Tab {
   Chat = 'chat',
@@ -89,23 +93,29 @@ export default function Home() {
           </form>
         </>
       ) : (
-        // Documentation tab content placeholder - will be replaced with real docs in next steps
-        <div className="flex-1 overflow-y-auto prose max-w-none">
-          <h2>Agent Documentation</h2>
-          <p>
-            This section will provide detailed documentation about the available
-            agents and tools in the system.
-          </p>
-          <ul>
-            <li><strong>Assistant</strong> – The main agent that delegates to specialised agents.</li>
-            <li><strong>Cat Facts Agent</strong> – Provides fun facts about cats.</li>
-            <li><strong>Joke Agent</strong> – Tells short, timeless jokes.</li>
-          </ul>
-          <p>
-            Further information will be added in the upcoming steps.
-          </p>
-        </div>
+        <Documentation />
       )}
     </main>
+  );
+}
+
+function Documentation() {
+  const docs = [
+    { title: 'Assistant', data: assistantConfig },
+    { title: 'Cat Facts Agent', data: catConfig },
+    { title: 'Joke Agent', data: jokeConfig },
+  ];
+
+  return (
+    <div className="flex-1 overflow-y-auto space-y-6">
+      {docs.map(({ title, data }) => (
+        <div key={title} className="border rounded-md p-4 bg-gray-50 dark:bg-gray-700">
+          <h2 className="text-xl font-semibold mb-2">{title}</h2>
+          <pre className="whitespace-pre-wrap bg-white dark:bg-gray-800 p-3 rounded text-sm overflow-x-auto text-gray-800 dark:text-gray-100">
+            {YAMLlib.stringify(data)}
+          </pre>
+        </div>
+      ))}
+    </div>
   );
 }

@@ -1,14 +1,30 @@
 import { Agent } from '@openai/agents';
-import { toolRegistry } from '@/tools';
+import { getToolsForAuthLevel } from '@/tools';
 import config from './definitions/jokeAgent.yaml';
 
-const { tools: toolNames = [], ...agentConfig } = config;
+const { tools: toolNames = [], modelSettings = {}, ...agentConfig } = config;
 
-const resolvedTools = (toolNames as string[]).map((n) => toolRegistry[n]).filter(Boolean);
+// Create agent factory that filters tools based on auth level
+export function createJokeAgent(authLevel: number = 0) {
+  const resolvedTools = getToolsForAuthLevel(toolNames as string[], authLevel);
 
+  // If no tools are available, remove toolChoice: "required" to prevent errors
+  const adjustedModelSettings = resolvedTools.length === 0 
+    ? { ...modelSettings, toolChoice: undefined }
+    : modelSettings;
+
+  return new Agent({
+    ...agentConfig,
+    modelSettings: adjustedModelSettings,
+    tools: resolvedTools,
+  });
+}
+
+// Default export for backwards compatibility
 const jokeAgent = new Agent({
   ...agentConfig,
-  tools: resolvedTools,
+  modelSettings,
+  tools: getToolsForAuthLevel(toolNames as string[], 0),
 });
 
 export default jokeAgent; 

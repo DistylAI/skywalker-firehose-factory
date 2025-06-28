@@ -39,6 +39,9 @@ export default function Home() {
   ];
 
   const [scenario, setScenario] = useState<string>(scenarios[0].value);
+  
+  // Auth level state
+  const [authLevel, setAuthLevel] = useState<string>("0");
 
   const handleSubmitAndFocus = (e: React.SyntheticEvent) => {
     handleSubmit(
@@ -47,6 +50,7 @@ export default function Home() {
         data: {
           context: {
             scenario,
+            auth_level: authLevel,
           },
         },
       },
@@ -90,25 +94,46 @@ export default function Home() {
 
         {/* Scenario selector (only visible on Chat tab) */}
         {activeTab === Tab.Chat && (
-          <div className="mt-4 flex flex-col gap-1 w-48">
-            <label htmlFor="scenario" className="text-sm font-medium text-foreground">
-              Scenario
-            </label>
-            <div className="relative">
-              <select
-                id="scenario"
-                name="scenario"
-                value={scenario}
-                onChange={(e) => setScenario(e.target.value)}
-                className="appearance-none w-full border border-border rounded px-3 py-2 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary pr-8"
-              >
-                {scenarios.map((s) => (
-                  <option key={s.value} value={s.value}>
-                    {s.label}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="absolute pointer-events-none right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <div className="mt-4 flex gap-4">
+            <div className="flex flex-col gap-1 w-48">
+              <label htmlFor="scenario" className="text-sm font-medium text-foreground">
+                Scenario
+              </label>
+              <div className="relative">
+                <select
+                  id="scenario"
+                  name="scenario"
+                  value={scenario}
+                  onChange={(e) => setScenario(e.target.value)}
+                  className="appearance-none w-full border border-border rounded px-3 py-2 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary pr-8"
+                >
+                  {scenarios.map((s) => (
+                    <option key={s.value} value={s.value}>
+                      {s.label}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute pointer-events-none right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              </div>
+            </div>
+            
+            <div className="flex flex-col gap-1 w-32">
+              <label htmlFor="auth_level" className="text-sm font-medium text-foreground">
+                Auth Level
+              </label>
+              <div className="relative">
+                <select
+                  id="auth_level"
+                  name="auth_level"
+                  value={authLevel}
+                  onChange={(e) => setAuthLevel(e.target.value)}
+                  className="appearance-none w-full border border-border rounded px-3 py-2 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary pr-8"
+                >
+                  <option value="0">0</option>
+                  <option value="1">1</option>
+                </select>
+                <ChevronDown className="absolute pointer-events-none right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              </div>
             </div>
           </div>
         )}

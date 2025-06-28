@@ -9,7 +9,8 @@
     "types": [
       "react",
       "react-dom",
-      "node"
+      "node",
+      "vitest/globals"
     ],
     "jsx": "preserve",
     "allowJs": true,

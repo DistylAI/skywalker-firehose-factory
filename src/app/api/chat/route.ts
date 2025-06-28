@@ -1,7 +1,7 @@
 import './openai-polyfill';
 import { run, user as userMessage, assistant as assistantMessage } from '@openai/agents';
 import { NextRequest } from 'next/server';
-import assistantAgent from '@/agents/assistantAgent';
+import { createAssistantAgent } from '@/agents/assistantAgent';
 
 export const runtime = 'edge';
 
@@ -30,7 +30,7 @@ export async function POST(req: NextRequest): Promise<Response> {
       return m.role === 'user' ? userMessage(text) : assistantMessage(text);
     });
 
-  const agent = assistantAgent;
+  const agent = createAssistantAgent(context);
 
   const streamed = await run(agent, historyItems, { stream: true, context });
 

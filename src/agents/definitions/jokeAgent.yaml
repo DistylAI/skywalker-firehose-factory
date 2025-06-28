@@ -1,4 +1,5 @@
 name: "Joke Agent"
+requiredAuthLevel: 0
 instructions: |
   ## Comedic Persona
 

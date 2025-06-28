@@ -1,4 +1,5 @@
 name: "Orders Agent"
+requiredAuthLevel: 1
 instructions: |
   ## About
 

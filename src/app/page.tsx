@@ -186,7 +186,7 @@ function Documentation() {
     name: string;
     description?: string;
     parameters?: any;
-    code?: string | null;
+    execution?: string | null;
   }>>([]);
 
   useEffect(() => {
@@ -198,14 +198,53 @@ function Documentation() {
       });
   }, []);
 
+  // Recursive renderer for key-value pairs (objects, arrays, primitives)
+  const renderKeyValue = (value: any): React.ReactNode => {
+    if (Array.isArray(value)) {
+      return (
+        <ul className="list-disc list-inside">
+          {value.map((item, idx) => (
+            <li key={idx}>{renderKeyValue(item)}</li>
+          ))}
+        </ul>
+      );
+    }
+
+    if (value && typeof value === 'object') {
+      return (
+        <dl className="space-y-1">
+          {Object.entries(value).map(([k, v]) => (
+            <div key={k} className="flex flex-col sm:flex-row sm:items-baseline gap-1">
+              <dt className="font-medium text-foreground sm:w-40 shrink-0">
+                {k}
+              </dt>
+              <dd className="text-muted-foreground break-words flex-1">
+                {renderKeyValue(v)}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      );
+    }
+
+    // Primitive fallback
+    return String(value);
+  };
+
   return (
     <div className="flex-1 overflow-y-auto space-y-6">
       {docs.map(({ title, data }) => {
-        const { instructions, handoffDescription, tools: agentTools, ...rest } =
-          data as Record<string, unknown>;
+        const {
+          name: _ignoredName,
+          instructions,
+          handoffDescription,
+          tools: agentTools,
+          ...rest
+        } = data as Record<string, unknown>;
 
         const instructionsStr = instructions ? String(instructions) : '';
         const handoffStr = handoffDescription ? String(handoffDescription) : '';
+        const hasRest = Object.keys(rest).length > 0;
 
         return (
           <div
@@ -232,19 +271,16 @@ function Documentation() {
             {Array.isArray(agentTools) && agentTools.length > 0 && (
               <div className="mb-4">
                 <h3 className="font-medium mb-1">Tools</h3>
-                <ul className="list-disc list-inside">
-                  {agentTools.map((t: string) => (
-                    <li key={t}>{t}</li>
-                  ))}
-                </ul>
+                {renderKeyValue(agentTools)}
               </div>
             )}
 
-            {/* Any remaining fields rendered as JSON for completeness */}
-            {Object.keys(rest).length > 0 && (
-              <pre className="whitespace-pre-wrap bg-white p-3 rounded text-sm overflow-x-auto text-gray-800">
-                {JSON.stringify(rest, null, 2)}
-              </pre>
+            {/* Any remaining fields rendered as friendly key-value list */}
+            {hasRest && (
+              <div className="mt-4 space-y-2">
+                <h3 className="font-medium mb-1">Additional Settings</h3>
+                {renderKeyValue(rest)}
+              </div>
             )}
           </div>
         );
@@ -270,11 +306,11 @@ function Documentation() {
                   </pre>
                 </div>
               )}
-              {tool.code && (
+              {tool.execution && (
                 <div className="mb-4">
                   <h3 className="font-medium mb-1">Execution Function Source</h3>
                   <pre className="whitespace-pre-wrap bg-white p-3 rounded text-sm overflow-x-auto text-gray-800">
-                    {tool.code}
+                    {tool.execution}
                   </pre>
                 </div>
               )}

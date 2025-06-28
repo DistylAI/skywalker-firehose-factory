@@ -1,11 +1,17 @@
 'use client';
 
 import { useChat } from '@ai-sdk/react';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import assistantConfig from '@/agents/definitions/assistantAgent.yaml';
 import catConfig from '@/agents/definitions/catAgent.yaml';
 import jokeConfig from '@/agents/definitions/jokeAgent.yaml';
+import { Button } from "@/components/ui/button";
+import { ArrowUp } from "lucide-react";
+import { ChatMessageList } from "@/components/ui/chat/chat-message-list";
+import { ChatBubble, ChatBubbleMessage } from "@/components/ui/chat/chat-bubble";
+import { ChatInput } from "@/components/ui/chat/chat-input";
+import { cn } from "@/lib/utils";
 
 enum Tab {
   Chat = 'chat',
@@ -19,79 +25,105 @@ export default function Home() {
   const { messages, input, handleInputChange, handleSubmit, status } =
     useChat({ streamProtocol: 'text' });
 
+  // Ref to re-focus the input after submit
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  const handleSubmitAndFocus = (e: any) => {
+    handleSubmit(e);
+    // Using a timeout ensures focus after UI updates
+    setTimeout(() => inputRef.current?.focus(), 0);
+  };
+
   return (
-    <main className="flex flex-col h-screen p-4 max-w-3xl mx-auto">
-      <h1 className="text-2xl font-semibold mb-4">AI Chat Prototype</h1>
+    <main className="flex flex-col h-screen max-w-4xl mx-auto bg-background">
+      {/* Header */}
+      <header className="sticky top-0 z-10 border-b border-border bg-background px-6 py-4">
+        <h1 className="text-xl font-semibold text-foreground">AI Chat</h1>
+
+        {/* Tabs */}
+        <div className="mt-4 flex gap-8 text-sm font-medium">
+          <button
+            className={cn(
+              "border-b-2 pb-2 transition-colors cursor-pointer",
+              activeTab === Tab.Chat
+                ? "border-primary text-primary"
+                : "border-transparent text-muted-foreground hover:text-foreground",
+            )}
+            onClick={() => setActiveTab(Tab.Chat)}
+          >
+            Chat
+          </button>
+          <button
+            className={cn(
+              "border-b-2 pb-2 transition-colors cursor-pointer",
+              activeTab === Tab.Docs
+                ? "border-primary text-primary"
+                : "border-transparent text-muted-foreground hover:text-foreground",
+            )}
+            onClick={() => setActiveTab(Tab.Docs)}
+          >
+            Documentation
+          </button>
+        </div>
+      </header>
 
       {/* Tabs */}
-      <div className="flex border-b mb-4">
-        <button
-          className={`px-4 py-2 -mb-px border-b-2 transition-colors ${
-            activeTab === Tab.Chat
-              ? 'border-blue-600 text-blue-600'
-              : 'border-transparent hover:text-blue-600'
-          }`}
-          onClick={() => setActiveTab(Tab.Chat)}
-        >
-          Chat
-        </button>
-        <button
-          className={`ml-4 px-4 py-2 -mb-px border-b-2 transition-colors ${
-            activeTab === Tab.Docs
-              ? 'border-blue-600 text-blue-600'
-              : 'border-transparent hover:text-blue-600'
-          }`}
-          onClick={() => setActiveTab(Tab.Docs)}
-        >
-          Documentation
-        </button>
-      </div>
-
       {/* Content */}
       {activeTab === Tab.Chat ? (
-        <>
+        <div className="flex flex-col flex-1 min-h-0">
           {/* Message list */}
-          <div className="flex-1 overflow-y-auto space-y-2 mb-4">
-            {messages.map((m) => (
-              <div
-                key={m.id}
-                className={`whitespace-pre-wrap p-3 rounded-lg max-w-[80%] ${
-                  m.role === 'user'
-                    ? 'bg-blue-600 text-white self-end ml-auto'
-                    : 'bg-gray-200 text-gray-900'
-                }`}
-              >
-                {/* We only render text parts for this simple prototype */}
-                {m.parts.map((part, i) =>
-                  part.type === 'text' ? <span key={i}>{part.text}</span> : null,
-                )}
+          <ChatMessageList className="flex-1 px-6 py-6 space-y-6" smooth>
+            {messages.length === 0 ? (
+              <div className="flex items-center justify-center h-full text-muted-foreground">
+                <p>Start a conversation...</p>
               </div>
-            ))}
-          </div>
+            ) : (
+              messages.map((m) => (
+                <ChatBubble
+                  key={m.id}
+                  variant={m.role === 'user' ? 'sent' : 'received'}
+                >
+                  <ChatBubbleMessage variant={m.role === 'user' ? 'sent' : 'received'}>
+                    {m.parts
+                      .filter((p) => p.type === 'text')
+                      .map((p, i) => (
+                        <span key={i}>{(p as any).text}</span>
+                      ))}
+                  </ChatBubbleMessage>
+                </ChatBubble>
+              ))
+            )}
+          </ChatMessageList>
 
           {/* Input */}
           <form
-            onSubmit={handleSubmit}
-            className="flex gap-2 items-center border-t pt-3"
+            onSubmit={handleSubmitAndFocus}
+            className="flex gap-3 items-end border-t border-border bg-background px-6 py-4 flex-shrink-0"
           >
-            <input
-              type="text"
-              className="flex-1 border rounded-md p-2 disabled:opacity-50"
+            <ChatInput
               placeholder="Type your message…"
               value={input}
               onChange={handleInputChange}
               disabled={status !== 'ready'}
+              ref={inputRef}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  handleSubmitAndFocus(e);
+                }
+              }}
+              className="flex-1 min-h-[44px] resize-none"
               autoFocus
             />
-            <button
+            <Button
               type="submit"
+              variant="outline"
               disabled={status !== 'ready'}
-              className="bg-blue-600 text-white rounded-md px-4 py-2 disabled:opacity-50"
+              className="w-[44px] h-[44px] p-0"
             >
-              Send
-            </button>
+              <ArrowUp className="h-5 w-5" />
+            </Button>
           </form>
-        </>
+        </div>
       ) : (
         <Documentation />
       )}
@@ -109,26 +141,26 @@ function Documentation() {
   return (
     <div className="flex-1 overflow-y-auto space-y-6">
       {docs.map(({ title, data }) => {
-        const { instructions, handoffDescription, tools, name, ...rest } =
-          data as any;
+        const { instructions, handoffDescription, tools, ...rest } =
+          data as Record<string, unknown>;
 
         return (
           <div
             key={title}
-            className="border rounded-md p-4 bg-gray-50 dark:bg-gray-700"
+            className="border border-border rounded-lg p-6 bg-card"
           >
             <h2 className="text-xl font-semibold mb-4">{title}</h2>
 
             {/* Instructions (Markdown) */}
             {instructions && (
-              <div className="mb-4 prose dark:prose-invert max-w-none">
+              <div className="mb-4 prose max-w-none">
                 <ReactMarkdown>{instructions}</ReactMarkdown>
               </div>
             )}
 
             {/* Handoff description (Markdown) */}
             {handoffDescription && (
-              <div className="mb-4 prose dark:prose-invert max-w-none">
+              <div className="mb-4 prose max-w-none">
                 <ReactMarkdown>{handoffDescription}</ReactMarkdown>
               </div>
             )}
@@ -147,7 +179,7 @@ function Documentation() {
 
             {/* Any remaining fields rendered as JSON for completeness */}
             {Object.keys(rest).length > 0 && (
-              <pre className="whitespace-pre-wrap bg-white dark:bg-gray-800 p-3 rounded text-sm overflow-x-auto text-gray-800 dark:text-gray-100">
+              <pre className="whitespace-pre-wrap bg-white p-3 rounded text-sm overflow-x-auto text-gray-800">
                 {JSON.stringify(rest, null, 2)}
               </pre>
             )}

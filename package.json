@@ -13,13 +13,16 @@
     "@ai-sdk/react": "^1.2.12",
     "@openai/agents": "^0.0.10",
     "ai": "^4.3.16",
+    "class-variance-authority": "^0.7.1",
     "dotenv": "^17.0.0",
+    "lucide-react": "^0.372.0",
     "next": "15.3.4",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "react-markdown": "^8.0.7",
-    "zod": "^3.25.67",
-    "yaml": "^2.3.4"
+    "tailwind-merge": "^2.6.0",
+    "yaml": "^2.3.4",
+    "zod": "^3.25.67"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
@@ -29,6 +32,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.3.4",
+    "shadcn-chat-cli": "^1.0.1",
     "tailwindcss": "^4",
     "typescript": "^5",
     "yaml-loader": "^0.7.0"

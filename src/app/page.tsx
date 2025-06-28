@@ -2,7 +2,7 @@
 
 import { useChat } from '@ai-sdk/react';
 import { useState } from 'react';
-import * as YAMLlib from 'yaml';
+import ReactMarkdown from 'react-markdown';
 import assistantConfig from '@/agents/definitions/assistantAgent.yaml';
 import catConfig from '@/agents/definitions/catAgent.yaml';
 import jokeConfig from '@/agents/definitions/jokeAgent.yaml';
@@ -108,14 +108,52 @@ function Documentation() {
 
   return (
     <div className="flex-1 overflow-y-auto space-y-6">
-      {docs.map(({ title, data }) => (
-        <div key={title} className="border rounded-md p-4 bg-gray-50 dark:bg-gray-700">
-          <h2 className="text-xl font-semibold mb-2">{title}</h2>
-          <pre className="whitespace-pre-wrap bg-white dark:bg-gray-800 p-3 rounded text-sm overflow-x-auto text-gray-800 dark:text-gray-100">
-            {YAMLlib.stringify(data)}
-          </pre>
-        </div>
-      ))}
+      {docs.map(({ title, data }) => {
+        const { instructions, handoffDescription, tools, name, ...rest } =
+          data as any;
+
+        return (
+          <div
+            key={title}
+            className="border rounded-md p-4 bg-gray-50 dark:bg-gray-700"
+          >
+            <h2 className="text-xl font-semibold mb-4">{title}</h2>
+
+            {/* Instructions (Markdown) */}
+            {instructions && (
+              <div className="mb-4 prose dark:prose-invert max-w-none">
+                <ReactMarkdown>{instructions}</ReactMarkdown>
+              </div>
+            )}
+
+            {/* Handoff description (Markdown) */}
+            {handoffDescription && (
+              <div className="mb-4 prose dark:prose-invert max-w-none">
+                <ReactMarkdown>{handoffDescription}</ReactMarkdown>
+              </div>
+            )}
+
+            {/* Tools list */}
+            {Array.isArray(tools) && tools.length > 0 && (
+              <div className="mb-4">
+                <h3 className="font-medium mb-1">Tools</h3>
+                <ul className="list-disc list-inside">
+                  {tools.map((t: string) => (
+                    <li key={t}>{t}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Any remaining fields rendered as JSON for completeness */}
+            {Object.keys(rest).length > 0 && (
+              <pre className="whitespace-pre-wrap bg-white dark:bg-gray-800 p-3 rounded text-sm overflow-x-auto text-gray-800 dark:text-gray-100">
+                {JSON.stringify(rest, null, 2)}
+              </pre>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }

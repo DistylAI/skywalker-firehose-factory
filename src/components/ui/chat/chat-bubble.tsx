@@ -150,13 +150,11 @@ const ChatBubbleAction: React.FC<ChatBubbleActionProps> = ({
   onClick,
   className,
   variant = "ghost",
-  size = "icon",
   ...props
 }) => (
   <Button
     variant={variant}
-    size={size}
-    className={className}
+    className={cn("h-8 w-8 p-0", className)}
     onClick={onClick}
     {...props}
   >

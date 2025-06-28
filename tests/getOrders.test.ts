@@ -2,72 +2,70 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { run, user as userMessage } from '@openai/agents';
 import assistantAgent from '../src/agents/assistantAgent';
 
-// Helper – run the assistant for a single user utterance and collect the full response text
-async function queryAssistant(prompt: string): Promise<string> {
+async function runAgentWithScenario(scenario: string, prompt: string): Promise<string> {
   const history = [userMessage(prompt)];
-  const streamed = await run(assistantAgent, history, { stream: true });
-  let text = '';
+  const context = { scenario };
+  
+  const streamed = await run(assistantAgent, history, { 
+    stream: true,
+    context: context
+  });
+  
+  let response = '';
   for await (const ev of streamed) {
     if (
       ev.type === 'raw_model_stream_event' &&
       ev.data.type === 'output_text_delta'
     ) {
-      text += ev.data.delta as string;
+      response += ev.data.delta as string;
     }
   }
-  return text;
+  
+  return response.trim();
 }
 
-describe('Orders Agent – end-to-end through assistantAgent', () => {
-  beforeEach(() => {
-    delete (globalThis as any).currentScenario;
+describe('Orders Tool E2E Tests', () => {
+
+  describe('Order ID verification', () => {
+    const testCases = [
+      { scenario: 'default', expectedOrderId: '1001', description: 'default scenario' },
+      { scenario: 'single', expectedOrderId: '4001', description: 'single order scenario' },
+      { scenario: 'multiple', expectedOrderId: '3001', description: 'multiple orders scenario' },
+      { scenario: 'cancelled', expectedOrderId: '2001', description: 'cancelled orders scenario' },
+      { scenario: 'returned', expectedOrderId: '6001', description: 'returned orders scenario' },
+      { scenario: 'intranit', expectedOrderId: '5001', description: 'in transit orders scenario' },
+    ];
+
+    testCases.forEach(({ scenario, expectedOrderId, description }) => {
+      it(`${description} should include order ${expectedOrderId}`, async () => {
+        const response = await runAgentWithScenario(scenario, 'Show me my recent orders');
+        
+        expect(response).toContain(expectedOrderId);
+      }, { timeout: 30000 });
+    });
   });
-  afterEach(() => {
-    delete (globalThis as any).currentScenario;
-  });
 
-  interface Case {
-    scenario?: string; // undefined → default scenario
-    expectedId: string;
-  }
+  describe('Response format validation', () => {
+    it('should provide human-readable order information', async () => {
+      const response = await runAgentWithScenario('default', 'What are my orders?');
+      
+      // Should contain order ID and some descriptive text
+      expect(response).toContain('1001');
+      expect(response.length).toBeGreaterThan(20); // Should be more than just an ID
+    }, { timeout: 30000 });
 
-  const cases: Case[] = [
-    { expectedId: '1001' },
-    { scenario: 'single', expectedId: '4001' },
-    { scenario: 'multiple', expectedId: '3001' },
-    { scenario: 'cancelled', expectedId: '2001' },
-    { scenario: 'returned', expectedId: '6001' },
-  ];
-
-  for (const { scenario, expectedId } of cases) {
-    const title = scenario
-      ? `scenario "${scenario}" returns order ${expectedId}`
-      : `default scenario returns order ${expectedId}`;
-
-    it(title, async () => {
-      const history = [
-        userMessage('Show my recent orders'),
-        {
-          type: 'function_call',
-          name: 'get_orders',
-          arguments: JSON.stringify({ context: { scenario: scenario ?? 'default' } }),
-          callId: 'test-call',
-          status: 'in_progress',
-        } as any,
+    it('should handle different prompts for the same scenario', async () => {
+      const prompts = [
+        'Show my orders',
+        'What orders do I have?',
+        'Can you list my recent purchases?',
+        'I need to see my order history'
       ];
 
-      const streamed = await run(assistantAgent, history, { stream: true });
-      let response = '';
-      for await (const ev of streamed) {
-        if (
-          ev.type === 'raw_model_stream_event' &&
-          ev.data.type === 'output_text_delta'
-        ) {
-          response += ev.data.delta as string;
-        }
+      for (const prompt of prompts) {
+        const response = await runAgentWithScenario('single', prompt);
+        expect(response).toContain('4001');
       }
-
-      expect(response).toMatch(new RegExp(expectedId));
-    });
-  }
-}); 
+    }, { timeout: 60000 });
+  });
+});

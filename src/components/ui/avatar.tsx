@@ -16,8 +16,7 @@ const Avatar = React.forwardRef<HTMLDivElement, AvatarProps>(
       {...props}
     >
       {src ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={src} alt="avatar" className="object-cover h-full w-full" />
+        <img src={src} alt="" className="object-cover h-full w-full" />
       ) : (
         <span className="flex h-full w-full items-center justify-center bg-gray-200 text-xs font-medium text-gray-600">
           {fallback?.slice(0, 2).toUpperCase()}
@@ -28,10 +27,10 @@ const Avatar = React.forwardRef<HTMLDivElement, AvatarProps>(
 );
 Avatar.displayName = "Avatar";
 
-export { Avatar, type AvatarProps };
+export { Avatar };
 
 export function AvatarImage(props: React.ImgHTMLAttributes<HTMLImageElement>) {
-  return <img {...props} className={cn("object-cover h-full w-full", props.className)} />;
+  return <img alt="" {...props} className={cn("object-cover h-full w-full", props.className)} />;
 }
 
 export function AvatarFallback({ children, className }: { children?: React.ReactNode; className?: string }) {

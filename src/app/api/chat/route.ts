@@ -13,22 +13,15 @@ interface IncomingMessage {
 
 interface ChatRequestBody {
   messages?: IncomingMessage[];
-  data?: Record<string, unknown>;
+  data?: {
+    context?: Record<string, unknown>;
+  };
 }
 
 export async function POST(req: NextRequest): Promise<Response> {
   const { messages = [], data }: ChatRequestBody = await req.json();
 
-  // Extract scenario passed from client (if any)
-  const scenario = (data?.scenario as string) ?? 'default';
-
-  // eslint-disable-next-line no-console
-  console.log('Chat scenario:', scenario);
-
-  // Store scenario globally so that downstream tool executions can adapt their response.
-  // NOTE: This is a simple demo approach and is **not** suitable for production due to potential
-  // cross-request data leaks. Prefer a proper per-request context/AsyncLocalStorage in real apps.
-  (globalThis as any).currentScenario = scenario;
+  const context = data?.context ?? { scenario: 'default' };
 
   const historyItems = (messages as IncomingMessage[])
     .filter((m) => m?.parts?.[0]?.text)
@@ -37,10 +30,9 @@ export async function POST(req: NextRequest): Promise<Response> {
       return m.role === 'user' ? userMessage(text) : assistantMessage(text);
     });
 
-  // TODO: Use scenario to switch between different agents if needed. For now, default to assistantAgent.
   const agent = assistantAgent;
 
-  const streamed = await run(agent, historyItems, { stream: true });
+  const streamed = await run(agent, historyItems, { stream: true, context });
 
   const encoder = new TextEncoder();
   const stream = new ReadableStream({

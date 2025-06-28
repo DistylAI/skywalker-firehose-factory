@@ -8,11 +8,10 @@ interface ChatMessageListProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 const ChatMessageList = React.forwardRef<HTMLDivElement, ChatMessageListProps>(
-  ({ className, children, smooth = false, ...props }, _ref) => {
+  ({ className, children, smooth = false, ...props }) => {
     const {
       scrollRef,
       isAtBottom,
-      autoScrollEnabled,
       scrollToBottom,
       disableAutoScroll,
     } = useAutoScroll({
@@ -35,10 +34,8 @@ const ChatMessageList = React.forwardRef<HTMLDivElement, ChatMessageListProps>(
         {!isAtBottom && (
           <Button
             onClick={scrollToBottom}
-            size="icon"
             variant="ghost"
-            /* Grayscale by default, color on hover */
-            className="absolute bottom-2 left-1/2 -translate-x-1/2 rounded-full shadow-md grayscale hover:grayscale-0 transition-all"
+            className="absolute bottom-2 left-1/2 -translate-x-1/2 rounded-full shadow-md grayscale hover:grayscale-0 transition-all h-8 w-8 p-0"
             aria-label="Scroll to bottom"
           >
             <ArrowDown className="h-4 w-4" />

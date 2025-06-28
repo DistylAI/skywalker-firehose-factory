@@ -6,7 +6,7 @@
 // @ts-ignore
 if (typeof globalThis.CustomEvent === 'undefined') {
   // Minimal CustomEvent polyfill that mimics constructor signature
-  class PolyfilledCustomEvent<T = any> extends Event {
+  class PolyfilledCustomEvent<T = unknown> extends Event {
     public detail: T;
     constructor(type: string, params: CustomEventInit<T> = {}) {
       super(type, params);

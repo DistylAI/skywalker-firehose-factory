@@ -1,10 +1,15 @@
+interface ExecutionContext {
+  context?: {
+    scenario?: string;
+  };
+}
+
 export default async function getOrdersExecute(
-  {
-    context,
-  }: { context?: { scenario?: string } } = {},
+  _params?: Record<string, unknown>,
+  executionContext?: ExecutionContext
 ) {
   const scenario: string =
-    context?.scenario ?? (globalThis as any).currentScenario ?? 'default';
+    executionContext?.context?.scenario ?? 'default';
 
   let orders;
 

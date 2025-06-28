@@ -26,13 +26,14 @@ export async function GET() {
 
   const toolMeta: ToolMetadata[] = await Promise.all(
     Object.values(toolRegistry).map(async (tool): Promise<ToolMetadata> => {
-      const { name, description, parameters } = tool as any;
+      const { name, description, parameters } = tool as { name: string; description: string; parameters: unknown; };
 
       // Grab the execution function source as a string (if available)
       let execution: string | null = null;
       try {
-        if (typeof (tool as any).execute === 'function') {
-          execution = (tool as any).execute.toString();
+        const toolWithExecute = tool as { execute?: (...args: unknown[]) => unknown };
+        if (typeof toolWithExecute.execute === 'function') {
+          execution = toolWithExecute.execute.toString();
         }
 
         // If execute couldn't be derived, fall back to reading source file

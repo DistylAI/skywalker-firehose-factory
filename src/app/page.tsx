@@ -45,7 +45,9 @@ export default function Home() {
       e,
       {
         data: {
-          scenario,
+          context: {
+            scenario,
+          },
         },
       },
     );
@@ -132,7 +134,7 @@ export default function Home() {
                     {m.parts
                       .filter((p) => p.type === 'text')
                       .map((p, i) => (
-                        <span key={i}>{(p as any).text}</span>
+                        <span key={i}>{(p as { text: string }).text}</span>
                       ))}
                   </ChatBubbleMessage>
                 </ChatBubble>
@@ -186,7 +188,7 @@ function Documentation() {
   const [tools, setTools] = useState<Array<{
     name: string;
     description?: string;
-    parameters?: any;
+    parameters?: unknown;
     execution?: string | null;
   }>>([]);
 
@@ -200,7 +202,7 @@ function Documentation() {
   }, []);
 
   // Recursive renderer for key-value pairs (objects, arrays, primitives)
-  const renderKeyValue = (value: any): React.ReactNode => {
+  const renderKeyValue = (value: unknown): React.ReactNode => {
     if (Array.isArray(value)) {
       return (
         <ul className="list-disc list-inside">
@@ -220,7 +222,7 @@ function Documentation() {
                 {k}
               </dt>
               <dd className="text-muted-foreground break-words flex-1">
-                {renderKeyValue(v)}
+                {renderKeyValue(v) as React.ReactNode}
               </dd>
             </div>
           ))}
@@ -229,19 +231,18 @@ function Documentation() {
     }
 
     // Primitive fallback
-    return String(value);
+    return String(value) as React.ReactNode;
   };
 
   return (
     <div className="flex-1 overflow-y-auto space-y-6">
       {docs.map(({ title, data }) => {
         const {
-          name: _ignoredName,
           instructions,
           handoffDescription,
           tools: agentTools,
           ...rest
-        } = data as Record<string, unknown>;
+        } = data as unknown as Record<string, unknown>;
 
         const instructionsStr = instructions ? String(instructions) : '';
         const handoffStr = handoffDescription ? String(handoffDescription) : '';

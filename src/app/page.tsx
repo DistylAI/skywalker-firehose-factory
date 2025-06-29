@@ -13,6 +13,7 @@ import { ChatMessageList } from "@/components/ui/chat/chat-message-list";
 import { ChatBubble, ChatBubbleMessage } from "@/components/ui/chat/chat-bubble";
 import { ChatInput } from "@/components/ui/chat/chat-input";
 import { cn } from "@/lib/utils";
+import { OrderCard } from "@/components/ui/order-card";
 
 enum Tab {
   Chat = 'chat',
@@ -151,20 +152,73 @@ export default function Home() {
               </div>
             ) : (
               <>
-                {messages.map((m) => (
-                  <ChatBubble
-                    key={m.id}
-                    variant={m.role === 'user' ? 'sent' : 'received'}
-                  >
-                    <ChatBubbleMessage variant={m.role === 'user' ? 'sent' : 'received'}>
-                      {m.parts
-                        .filter((p) => p.type === 'text')
-                        .map((p, i) => (
-                          <span key={i}>{(p as { text: string }).text}</span>
-                        ))}
-                    </ChatBubbleMessage>
-                  </ChatBubble>
-                ))}
+                {messages.map((m) => {
+                  // Combine all text parts into a single string for easier processing
+                  const textContent = m.parts
+                    .filter((p) => p.type === "text")
+                    .map((p) => (p as { text: string }).text)
+                    .join("\n");
+
+                  // Helper to parse a bullet line like "• Order 1001 — Lightsaber (Qty 1) — shipped"
+                  const parseOrderLine = (line: string) => {
+                    const orderRegex = /•\s*Order\s*(\d+)\s*—\s*([^–]+)\s*\(Qty\s*(\d+)\)\s*—\s*(.*)/i;
+                    const match = line.match(orderRegex);
+                    if (!match) return undefined;
+                    const [, id, item, quantity, status] = match;
+                    return {
+                      id,
+                      customer: "", // customer name is not provided in bullet line
+                      item: item.trim(),
+                      quantity: Number(quantity),
+                      status: status.trim(),
+                    } as const;
+                  };
+
+                  // Split lines and separate into bullet lines/orders and other content
+                  const lines = textContent.split(/\n+/);
+                  const orderLines = lines.filter((l) => l.trim().startsWith("•"));
+                  const orderCards = orderLines
+                    .map(parseOrderLine)
+                    .filter(Boolean) as Array<{
+                      id: string;
+                      customer: string;
+                      item: string;
+                      quantity: number;
+                      status: string;
+                    }>;
+
+                  const nonOrderText = lines
+                    .filter((l) => !l.trim().startsWith("•"))
+                    .join("\n");
+
+                  return (
+                    <ChatBubble
+                      key={m.id}
+                      variant={m.role === "user" ? "sent" : "received"}
+                      className="flex-col"
+                    >
+                      {/* Render any non-order text */}
+                      {nonOrderText && (
+                        <ChatBubbleMessage
+                          variant={
+                            m.role === "user" ? "sent" : "received"
+                          }
+                        >
+                          {nonOrderText}
+                        </ChatBubbleMessage>
+                      )}
+
+                      {/* Render detected orders as cards */}
+                      {orderCards.length > 0 && (
+                        <div className="flex flex-col gap-4 w-full">
+                          {orderCards.map((order) => (
+                            <OrderCard key={order.id} order={order} />
+                          ))}
+                        </div>
+                      )}
+                    </ChatBubble>
+                  );
+                })}
                 {/* Show loading indicator when waiting for assistant response */}
                 {status !== 'ready' && messages[messages.length - 1]?.role === 'user' && (
                   <ChatBubble variant="received">

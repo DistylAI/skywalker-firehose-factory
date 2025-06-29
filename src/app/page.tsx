@@ -20,10 +20,15 @@ enum Tab {
   Docs = 'docs',
 }
 
+type ChatMessage = {
+  id: string;
+  role: string;
+  parts: Array<{ type: string; text: string }>;
+};
+
 export default function Home() {
   const [activeTab, setActiveTab] = useState<Tab>(Tab.Chat);
 
-  // Chat hook (only used when on chat tab but always initialised for simplicity)
   const {
     messages,
     input,
@@ -31,7 +36,6 @@ export default function Home() {
     handleSubmit,
     status,
     stop,
-    // @ts-ignore – `setMessages` exists in newer AI SDK versions but may not yet be in the type definitions
     setMessages,
   } = useChat({ streamProtocol: 'text' }) as any;
 
@@ -65,20 +69,17 @@ export default function Home() {
       },
     );
 
-    // Using a timeout ensures focus after UI updates
     setTimeout(() => inputRef.current?.focus(), 0);
   };
 
   // Reset chat by clearing messages and re-focusing the input
   const handleResetChat = () => {
-    // Abort any ongoing request first
     if (status === 'streaming' || status === 'submitted') {
       stop();
     }
 
     setMessages([]);
 
-    // Ensure the input regains focus after UI updates
     setTimeout(() => inputRef.current?.focus(), 0);
   };
 
@@ -88,7 +89,6 @@ export default function Home() {
       <header className="sticky top-0 z-10 border-b border-border bg-background px-6 py-4">
         <h1 className="text-xl font-semibold text-foreground">Skywalker Firehose Factory</h1>
 
-        {/* Tabs & Scenario selector */}
         <div className="mt-4 flex gap-8 text-sm font-medium">
           <button
             className={cn(
@@ -114,7 +114,6 @@ export default function Home() {
           </button>
         </div>
 
-        {/* Scenario selector (only visible on Chat tab) */}
         {activeTab === Tab.Chat && (
           <div className="mt-4 flex gap-4">
             <div className="flex flex-col gap-1 w-48">
@@ -161,8 +160,6 @@ export default function Home() {
         )}
       </header>
 
-      {/* Tabs */}
-      {/* Content */}
       {activeTab === Tab.Chat ? (
         <div className="flex flex-col flex-1 min-h-0">
           {/* Message list */}
@@ -173,11 +170,11 @@ export default function Home() {
               </div>
             ) : (
               <>
-                {messages.map((m) => {
+                {messages.map((m: ChatMessage) => {
                   // Combine all text parts into a single string for easier processing
                   const textContent = m.parts
-                    .filter((p) => p.type === "text")
-                    .map((p) => (p as { text: string }).text)
+                    .filter((p: { type: string; text: string }) => p.type === "text")
+                    .map((p) => p.text)
                     .join("\n");
 
                   // Helper to parse a bullet line like "• Order 1001 — Lightsaber (Qty 1) — shipped"
@@ -197,7 +194,7 @@ export default function Home() {
 
                   // Split lines and separate into bullet lines/orders and other content
                   const lines = textContent.split(/\n+/);
-                  const orderLines = lines.filter((l) => l.trim().startsWith("•"));
+                  const orderLines = lines.filter((l: string) => l.trim().startsWith("•"));
                   const orderCards = orderLines
                     .map(parseOrderLine)
                     .filter(Boolean) as Array<{
@@ -209,7 +206,7 @@ export default function Home() {
                     }>;
 
                   const nonOrderText = lines
-                    .filter((l) => !l.trim().startsWith("•"))
+                    .filter((l: string) => !l.trim().startsWith("•"))
                     .join("\n");
 
                   return (
@@ -218,7 +215,6 @@ export default function Home() {
                       variant={m.role === "user" ? "sent" : "received"}
                       className="flex-col"
                     >
-                      {/* Render any non-order text */}
                       {nonOrderText && (
                         <ChatBubbleMessage
                           variant={
@@ -229,7 +225,6 @@ export default function Home() {
                         </ChatBubbleMessage>
                       )}
 
-                      {/* Render detected orders as cards */}
                       {orderCards.length > 0 && (
                         <div className="flex flex-col gap-4 w-full">
                           {orderCards.map((order) => (
@@ -240,7 +235,6 @@ export default function Home() {
                     </ChatBubble>
                   );
                 })}
-                {/* Show loading indicator when waiting for assistant response */}
                 {status !== 'ready' && messages[messages.length - 1]?.role === 'user' && (
                   <ChatBubble variant="received">
                     <ChatBubbleMessage variant="received" isLoading={true} />
@@ -321,7 +315,6 @@ function Documentation() {
       });
   }, []);
 
-  // Recursive renderer for key-value pairs (objects, arrays, primitives)
   const renderKeyValue = (value: unknown): React.ReactNode => {
     if (Array.isArray(value)) {
       return (
@@ -350,7 +343,6 @@ function Documentation() {
       );
     }
 
-    // Primitive fallback
     return String(value) as React.ReactNode;
   };
 
@@ -375,21 +367,18 @@ function Documentation() {
           >
             <h2 className="text-xl font-semibold mb-4">{title}</h2>
 
-            {/* Instructions (Markdown) */}
             {instructionsStr && (
               <div className="mb-4 prose max-w-none">
                 <ReactMarkdown>{instructionsStr}</ReactMarkdown>
               </div>
             )}
 
-            {/* Handoff description (Markdown) */}
             {handoffStr && (
               <div className="mb-4 prose max-w-none">
                 <ReactMarkdown>{handoffStr}</ReactMarkdown>
               </div>
             )}
 
-            {/* Tools list */}
             {Array.isArray(agentTools) && agentTools.length > 0 && (
               <div className="mb-4">
                 <h3 className="font-medium mb-1">Tools</h3>
@@ -397,7 +386,6 @@ function Documentation() {
               </div>
             )}
 
-            {/* Any remaining fields rendered as friendly key-value list */}
             {hasRest && (
               <div className="mt-4 space-y-2">
                 <h3 className="font-medium mb-1">Additional Settings</h3>
@@ -408,7 +396,6 @@ function Documentation() {
         );
       })}
 
-      {/* Tools Documentation */}
       {tools.length > 0 && (
         <div className="space-y-6">
           {tools.map((tool) => (

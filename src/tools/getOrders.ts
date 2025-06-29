@@ -11,7 +11,6 @@ const getOrdersTool = tool({
   execute: getOrdersExecute,
 });
 
-// Export the tool with auth level metadata
 export const getOrders = {
   tool: getOrdersTool,
   requiredAuthLevel: 1,

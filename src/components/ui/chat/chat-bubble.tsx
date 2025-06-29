@@ -107,6 +107,4 @@ ChatBubbleMessage.displayName = "ChatBubbleMessage";
 export {
   ChatBubble,
   ChatBubbleMessage,
-  chatBubbleVariant,
-  chatBubbleMessageVariants,
 };

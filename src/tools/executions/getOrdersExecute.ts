@@ -64,7 +64,7 @@ export default async function getOrdersExecute(
       ];
       break;
 
-    case 'intranit': // assumed typo for "in transit"
+    case 'intranit':
       orders = [
         {
           id: '5001',

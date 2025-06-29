@@ -7,7 +7,7 @@ import { z } from 'zod';
 
 // The openai@5.x types don't yet expose `output_text` on Response.  This minimal
 // interface lets us keep strict typing until the SDK is updated.
-export interface ResponseWithText { output_text?: string }
+interface ResponseWithText { output_text?: string }
 
 // Runtime-safe schema that also doubles as the JSON-schema we pass to the model
 const LanguageDetectionSchema = z.object({

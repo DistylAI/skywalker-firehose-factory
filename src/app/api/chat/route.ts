@@ -51,9 +51,7 @@ export async function POST(req: NextRequest): Promise<Response> {
           }
         }
       } catch (error: any) {
-        // Handle guardrail errors
         if (error.constructor.name === 'InputGuardrailTripwireTriggered') {
-          // Get the error message from the guardrail output
           const errorMessage = error.guardrailResults?.[0]?.output?.outputInfo?.errorMessage || '[[ error unsupported language ]]';
           controller.enqueue(encoder.encode(errorMessage));
         } else {

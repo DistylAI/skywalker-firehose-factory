@@ -49,7 +49,7 @@ if (portkeyApiKey) {
 // Make the Portkey-routed client the default for the OpenAI Agents SDK so
 // that all uses of `@openai/agents` (e.g., assistantAgent, language guardrail)
 // automatically go through Portkey as well.
-setDefaultOpenAIClient(client);
+setDefaultOpenAIClient(client as any);
 
 // Informative startup log so we can verify in both server runtime and tests
 // whether requests are going through Portkey or directly to OpenAI.

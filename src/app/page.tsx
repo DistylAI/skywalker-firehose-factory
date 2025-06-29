@@ -8,7 +8,7 @@ import assistantConfig from '@/agents/definitions/assistantAgent.yaml';
 import ordersConfig from '@/agents/definitions/ordersAgent.yaml';
 import jokeConfig from '@/agents/definitions/jokeAgent.yaml';
 import { Button } from "@/components/ui/button";
-import { ArrowUp, ChevronDown } from "lucide-react";
+import { ArrowUp, ChevronDown, Square } from "lucide-react";
 import { ChatMessageList } from "@/components/ui/chat/chat-message-list";
 import { ChatBubble, ChatBubbleMessage } from "@/components/ui/chat/chat-bubble";
 import { ChatInput } from "@/components/ui/chat/chat-input";
@@ -23,7 +23,7 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<Tab>(Tab.Chat);
 
   // Chat hook (only used when on chat tab but always initialised for simplicity)
-  const { messages, input, handleInputChange, handleSubmit, status } =
+  const { messages, input, handleInputChange, handleSubmit, status, stop } =
     useChat({ streamProtocol: 'text' });
 
   // Ref to re-focus the input after submit
@@ -184,7 +184,6 @@ export default function Home() {
               placeholder="Type your message…"
               value={input}
               onChange={handleInputChange}
-              disabled={status !== 'ready'}
               ref={inputRef}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
@@ -195,12 +194,17 @@ export default function Home() {
               autoFocus
             />
             <Button
-              type="submit"
+              type={status === 'ready' ? 'submit' : 'button'}
               variant="outline"
-              disabled={status !== 'ready'}
+              onClick={status === 'ready' ? undefined : stop}
+              disabled={status !== 'ready' && status !== 'submitted' && status !== 'streaming'}
               className="w-[44px] h-[44px] p-0"
             >
-              <ArrowUp className="h-5 w-5" />
+              {status === 'ready' ? (
+                <ArrowUp className="h-5 w-5" />
+              ) : (
+                <Square className="h-5 w-5" />
+              )}
             </Button>
           </form>
         </div>

@@ -333,7 +333,7 @@ function Documentation() {
               {tool.description && (
                 <p className="mb-4 text-muted-foreground">{tool.description}</p>
               )}
-              {tool.parameters && (
+              {tool.parameters != null && (
                 <div className="mb-4">
                   <h3 className="font-medium mb-1">Parameters (JSON Schema)</h3>
                   <pre className="whitespace-pre-wrap bg-white p-3 rounded text-sm overflow-x-auto text-gray-800">

@@ -6,15 +6,16 @@ import { createAssistantAgent } from '@/agents/assistantAgent';
 export const runtime = 'edge';
 
 interface IncomingMessage {
-  id: string;
-  role: 'user' | 'assistant' | string;
-  parts: Array<{ type: string; text?: string }>;
+  role: 'user' | 'assistant';
+  parts?: Array<{
+    text?: string;
+  }>;
 }
 
 interface ChatRequestBody {
   messages?: IncomingMessage[];
   data?: {
-    context?: Record<string, unknown>;
+    context?: any;
   };
 }
 
@@ -26,7 +27,7 @@ export async function POST(req: NextRequest): Promise<Response> {
   const historyItems = (messages as IncomingMessage[])
     .filter((m) => m?.parts?.[0]?.text)
     .map((m) => {
-      const text = m.parts[0].text as string;
+      const text = m.parts![0].text as string;
       return m.role === 'user' ? userMessage(text) : assistantMessage(text);
     });
 
@@ -35,6 +36,7 @@ export async function POST(req: NextRequest): Promise<Response> {
   const streamed = await run(agent, historyItems, { stream: true, context });
 
   const encoder = new TextEncoder();
+  
   const stream = new ReadableStream({
     async start(controller) {
       try {
@@ -43,12 +45,20 @@ export async function POST(req: NextRequest): Promise<Response> {
             ev.type === 'raw_model_stream_event' &&
             ev.data.type === 'output_text_delta'
           ) {
-            const token = ev.data.delta as string;
-            controller.enqueue(encoder.encode(token));
+            const chunk = encoder.encode(ev.data.delta as string);
+            controller.enqueue(chunk);
           }
         }
-      } catch (e) {
-        controller.error(e);
+      } catch (error: any) {
+        // Handle guardrail errors
+        if (error.constructor.name === 'InputGuardrailTripwireTriggered') {
+          // Get the error message from the guardrail output
+          const errorMessage = error.guardrailResults?.[0]?.output?.outputInfo?.errorMessage || '[[ error unsupported language ]]';
+          controller.enqueue(encoder.encode(errorMessage));
+        } else {
+          console.error('Stream error:', error);
+          controller.enqueue(encoder.encode('An error occurred while processing your request.'));
+        }
       } finally {
         controller.close();
       }

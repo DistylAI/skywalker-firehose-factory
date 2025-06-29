@@ -4,6 +4,7 @@ import { createJokeAgent } from './jokeAgent';
 import ordersConfig from './definitions/ordersAgent.yaml';
 import jokeConfig from './definitions/jokeAgent.yaml';
 import config from './definitions/assistantAgent.yaml';
+import { sdkLanguageGuardrail } from '../guardrails/languageGuardrail';
 
 interface Context {
   auth_level?: string;
@@ -17,7 +18,7 @@ interface AgentConfig {
 }
 
 // Create assistant agent with dynamically created handoffs based on auth level
-export function createAssistantAgent(context: Context): Agent {
+export function createAssistantAgent(context: Context) {
   const userAuthLevel = parseInt(context.auth_level || '0', 10);
   
   // Only include handoffs where user meets the required auth level
@@ -62,20 +63,10 @@ ${availableHandoffRules.join('\n')}
 - If asked about orders or order information, politely inform the user that you don't have access to order information.`;
   }
 
-  return Agent.create({
-    ...config,
+  return new Agent({
+    name: config.name,
     instructions,
     handoffs,
+    inputGuardrails: [sdkLanguageGuardrail],
   });
-}
-
-// Export a default agent instance for backwards compatibility
-const assistantAgent = Agent.create({
-  ...config,
-  handoffs: [
-    createOrdersAgent(0),
-    createJokeAgent(0),
-  ],
-});
-
-export default assistantAgent; 
+} 

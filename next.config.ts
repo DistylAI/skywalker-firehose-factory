@@ -9,6 +9,16 @@ const nextConfig: NextConfig = {
       type: 'javascript/auto', // allow yaml-loader to output JS module
       use: 'yaml-loader',
     });
+
+    // Suppress punycode deprecation warnings during build
+    config.ignoreWarnings = [
+      ...(config.ignoreWarnings || []),
+      {
+        module: /node_modules/,
+        message: /punycode/,
+      },
+    ];
+
     return config;
   },
 

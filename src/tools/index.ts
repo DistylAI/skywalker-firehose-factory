@@ -1,12 +1,14 @@
 import getOrders, { getOrdersName } from './getOrders';
 import getJoke, { getJokeName } from './getJoke';
 import getCatFact, { getCatFactName } from './getCatFact';
+import detectLanguage, { detectLanguageName } from './detectLanguage';
 
 // Tool registry with auth level metadata
-export const toolRegistry = {
+export const toolRegistry: Record<string, any> = {
   [getOrdersName]: getOrders,
   [getJokeName]: getJoke,
   [getCatFactName]: getCatFact,
+  [detectLanguageName]: detectLanguage,
 };
 
 // Get tools filtered by auth level

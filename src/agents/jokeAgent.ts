@@ -20,11 +20,4 @@ export function createJokeAgent(authLevel: number = 0) {
   });
 }
 
-// Default export for backwards compatibility
-const jokeAgent = new Agent({
-  ...agentConfig,
-  modelSettings,
-  tools: getToolsForAuthLevel(toolNames as string[], 0),
-});
-
-export default jokeAgent; 
+// (Legacy default export removed) 

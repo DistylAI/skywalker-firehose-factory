@@ -1,4 +1,4 @@
-import OpenAI from 'openai';
+import openai from '../../src/lib/openai';
 import { z } from 'zod';
 
 const JudgeResponse = z.object({
@@ -18,7 +18,7 @@ export async function llmJudge({
   response: string;
   requirements: string;
 }): Promise<{ meets: boolean; reason: string }> {
-  const openai = new OpenAI();
+  // Reuse global Portkey-routed OpenAI client
   
   const prompt = `You are an evaluator that judges whether an AI assistant response meets certain requirements.
 

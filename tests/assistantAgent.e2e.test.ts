@@ -112,57 +112,6 @@ describe('Assistant Agent E2E Tests', () => {
     });
   });
 
-  describe('Legacy Order scenarios (backward compatibility)', () => {
-    const scenarios = [
-      { 
-        name: 'default scenario', 
-        scenario: 'default', 
-        expectedOrderId: '1001',
-        prompt: 'Show me my recent orders'
-      },
-      { 
-        name: 'single order scenario', 
-        scenario: 'single', 
-        expectedOrderId: '4001',
-        prompt: 'What orders do I have?'
-      },
-      { 
-        name: 'multiple orders scenario', 
-        scenario: 'multiple', 
-        expectedOrderId: '3001',
-        prompt: 'Can you show me my orders?'
-      },
-      { 
-        name: 'cancelled orders scenario', 
-        scenario: 'cancelled', 
-        expectedOrderId: '2001',
-        prompt: 'Show my orders please'
-      },
-      { 
-        name: 'returned orders scenario', 
-        scenario: 'returned', 
-        expectedOrderId: '6001',
-        prompt: 'List my recent orders'
-      },
-      { 
-        name: 'in transit orders scenario', 
-        scenario: 'intranit', 
-        expectedOrderId: '5001',
-        prompt: 'What are my current orders?'
-      }
-    ];
-
-    scenarios.forEach(({ name, scenario, expectedOrderId, prompt }) => {
-      it(`${name} should work without explicit auth level (defaults to 0)`, async () => {
-        const context = { scenario };
-        const response = await runAgentWithContext(context, prompt);
-        
-        // With default auth level 0, should not contain order ID
-        expect(response).not.toContain(expectedOrderId);
-      }, 30000);
-    });
-  });
-
   describe('Natural conversation flows with auth levels', () => {
     it('should politely decline order requests with auth level 0', async () => {
       const context = {

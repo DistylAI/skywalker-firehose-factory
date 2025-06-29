@@ -20,11 +20,4 @@ export function createOrdersAgent(authLevel: number = 0) {
   });
 }
 
-// Default export for backwards compatibility
-const ordersAgent = new Agent({
-  ...agentConfig,
-  modelSettings,
-  tools: getToolsForAuthLevel(toolNames as string[], 0),
-});
-
-export default ordersAgent; 
+// (Legacy default export removed) 

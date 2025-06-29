@@ -8,11 +8,12 @@ import assistantConfig from '@/agents/definitions/assistantAgent.yaml';
 import ordersConfig from '@/agents/definitions/ordersAgent.yaml';
 import jokeConfig from '@/agents/definitions/jokeAgent.yaml';
 import { Button } from "@/components/ui/button";
-import { ArrowUp, ChevronDown, Square } from "lucide-react";
+import { ArrowUp, ChevronDown, Square, RotateCcw } from "lucide-react";
 import { ChatMessageList } from "@/components/ui/chat/chat-message-list";
 import { ChatBubble, ChatBubbleMessage } from "@/components/ui/chat/chat-bubble";
 import { ChatInput } from "@/components/ui/chat/chat-input";
 import { cn } from "@/lib/utils";
+import { OrderCard } from "@/components/ui/order-card";
 
 enum Tab {
   Chat = 'chat',
@@ -23,8 +24,16 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<Tab>(Tab.Chat);
 
   // Chat hook (only used when on chat tab but always initialised for simplicity)
-  const { messages, input, handleInputChange, handleSubmit, status, stop } =
-    useChat({ streamProtocol: 'text' });
+  const {
+    messages,
+    input,
+    handleInputChange,
+    handleSubmit,
+    status,
+    stop,
+    // @ts-ignore – `setMessages` exists in newer AI SDK versions but may not yet be in the type definitions
+    setMessages,
+  } = useChat({ streamProtocol: 'text' }) as any;
 
   // Ref to re-focus the input after submit
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -57,6 +66,19 @@ export default function Home() {
     );
 
     // Using a timeout ensures focus after UI updates
+    setTimeout(() => inputRef.current?.focus(), 0);
+  };
+
+  // Reset chat by clearing messages and re-focusing the input
+  const handleResetChat = () => {
+    // Abort any ongoing request first
+    if (status === 'streaming' || status === 'submitted') {
+      stop();
+    }
+
+    setMessages([]);
+
+    // Ensure the input regains focus after UI updates
     setTimeout(() => inputRef.current?.focus(), 0);
   };
 
@@ -151,20 +173,73 @@ export default function Home() {
               </div>
             ) : (
               <>
-                {messages.map((m) => (
-                  <ChatBubble
-                    key={m.id}
-                    variant={m.role === 'user' ? 'sent' : 'received'}
-                  >
-                    <ChatBubbleMessage variant={m.role === 'user' ? 'sent' : 'received'}>
-                      {m.parts
-                        .filter((p) => p.type === 'text')
-                        .map((p, i) => (
-                          <span key={i}>{(p as { text: string }).text}</span>
-                        ))}
-                    </ChatBubbleMessage>
-                  </ChatBubble>
-                ))}
+                {messages.map((m) => {
+                  // Combine all text parts into a single string for easier processing
+                  const textContent = m.parts
+                    .filter((p) => p.type === "text")
+                    .map((p) => (p as { text: string }).text)
+                    .join("\n");
+
+                  // Helper to parse a bullet line like "• Order 1001 — Lightsaber (Qty 1) — shipped"
+                  const parseOrderLine = (line: string) => {
+                    const orderRegex = /•\s*Order\s*(\d+)\s*—\s*([^–]+)\s*\(Qty\s*(\d+)\)\s*—\s*(.*)/i;
+                    const match = line.match(orderRegex);
+                    if (!match) return undefined;
+                    const [, id, item, quantity, status] = match;
+                    return {
+                      id,
+                      customer: "", // customer name is not provided in bullet line
+                      item: item.trim(),
+                      quantity: Number(quantity),
+                      status: status.trim(),
+                    } as const;
+                  };
+
+                  // Split lines and separate into bullet lines/orders and other content
+                  const lines = textContent.split(/\n+/);
+                  const orderLines = lines.filter((l) => l.trim().startsWith("•"));
+                  const orderCards = orderLines
+                    .map(parseOrderLine)
+                    .filter(Boolean) as Array<{
+                      id: string;
+                      customer: string;
+                      item: string;
+                      quantity: number;
+                      status: string;
+                    }>;
+
+                  const nonOrderText = lines
+                    .filter((l) => !l.trim().startsWith("•"))
+                    .join("\n");
+
+                  return (
+                    <ChatBubble
+                      key={m.id}
+                      variant={m.role === "user" ? "sent" : "received"}
+                      className="flex-col"
+                    >
+                      {/* Render any non-order text */}
+                      {nonOrderText && (
+                        <ChatBubbleMessage
+                          variant={
+                            m.role === "user" ? "sent" : "received"
+                          }
+                        >
+                          {nonOrderText}
+                        </ChatBubbleMessage>
+                      )}
+
+                      {/* Render detected orders as cards */}
+                      {orderCards.length > 0 && (
+                        <div className="flex flex-col gap-4 w-full">
+                          {orderCards.map((order) => (
+                            <OrderCard key={order.id} order={order} />
+                          ))}
+                        </div>
+                      )}
+                    </ChatBubble>
+                  );
+                })}
                 {/* Show loading indicator when waiting for assistant response */}
                 {status !== 'ready' && messages[messages.length - 1]?.role === 'user' && (
                   <ChatBubble variant="received">
@@ -180,6 +255,14 @@ export default function Home() {
             onSubmit={handleSubmitAndFocus}
             className="flex gap-3 items-end border-t border-border bg-background px-6 py-4 flex-shrink-0"
           >
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleResetChat}
+              className="w-[44px] h-[44px] p-0"
+            >
+              <RotateCcw className="h-5 w-5" />
+            </Button>
             <ChatInput
               placeholder="Type your message…"
               value={input}

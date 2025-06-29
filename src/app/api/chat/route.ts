@@ -1,4 +1,5 @@
 import './openai-polyfill';
+import '@/lib/openai'; // Ensure OpenAI client (with Portkey proxy & logging) is initialised early
 import { run, user as userMessage, assistant as assistantMessage } from '@openai/agents';
 import { NextRequest } from 'next/server';
 import { createAssistantAgent } from '@/agents/assistantAgent';

@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-This is an AI agent system that uses Test-Driven Development (TDD) and evaluation-driven development patterns. All code changes must follow strict testing protocols to ensure system reliability and prevent regressions.
+This is an AI agent for customer services. Any changes to this repo should strictly follow Test-Driven Development (TDD) and evaluation-driven development patterns whenever possible. In addition, there should be a bias to have agents respond in natural language, and to have evals (tests) use llmj (llm-as-a-judge) to evaluate those answers, unless specific hard coded responses and deterministic checks are requested.
 
 ## Core Development Philosophy: TDD/Eval-Driven Development
 

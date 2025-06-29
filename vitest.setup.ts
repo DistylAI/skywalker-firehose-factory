@@ -1,6 +1,8 @@
+import 'dotenv/config';
 import { vi } from 'vitest';
 import getOrdersExecute from './src/tools/executions/getOrdersExecute';
 import { getOrdersName } from './src/tools/getOrders';
+import './src/lib/openai'; // Initialise OpenAI client with Portkey proxy & logging for tests
 
 // Mock the @openai/agents module so that its `run` method executes the
 // `get_orders` tool locally for tests, removing the need to hit the OpenAI
@@ -46,4 +48,4 @@ vi.mock('@openai/agents', async () => {
   }
 
   return { ...actual, run: patchedRun };
-}); 
+});

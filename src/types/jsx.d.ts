@@ -6,7 +6,7 @@ declare global {
   namespace JSX {
     // Allow any intrinsic element without type checking its props
     interface IntrinsicElements {
-      [elemName: string]: any;
+      [elemName: string]: Record<string, unknown>;
     }
   }
 } 

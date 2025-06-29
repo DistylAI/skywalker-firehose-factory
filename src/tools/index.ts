@@ -3,7 +3,12 @@ import getJoke, { getJokeName } from './getJoke';
 import getCatFact, { getCatFactName } from './getCatFact';
 import detectLanguage, { detectLanguageName } from './detectLanguage';
 
-export const toolRegistry: Record<string, any> = {
+interface ToolWrapper {
+  tool: unknown;
+  requiredAuthLevel: number;
+}
+
+export const toolRegistry: Record<string, ToolWrapper> = {
   [getOrdersName]: getOrders,
   [getJokeName]: getJoke,
   [getCatFactName]: getCatFact,

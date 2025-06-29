@@ -56,7 +56,14 @@ export const sdkLanguageGuardrail: InputGuardrail = {
       inputText = rawInput;
     } else {
       const texts: string[] = [];
-      for (const item of rawInput as any[]) {
+
+      type MessageLike = {
+        type?: string;
+        role?: string;
+        content?: unknown;
+      };
+
+      for (const item of rawInput as MessageLike[]) {
         if (item.type === 'message' && item.role === 'user') {
           if (typeof item.content === 'string') {
             texts.push(item.content);

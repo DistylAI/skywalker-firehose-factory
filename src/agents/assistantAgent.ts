@@ -7,14 +7,24 @@ import config from './definitions/assistantAgent.yaml';
 import { sdkLanguageGuardrail } from '../guardrails/languageGuardrail';
 
 interface Context {
+  /** Authentication level provided by the client (e.g. "0", "1"). */
   auth_level?: string;
-  [key: string]: any;
+  /** Scenario identifier used by the demo UI (e.g. "default", "cancelled"). */
+  scenario?: string;
 }
 
 interface AgentConfig {
+  /** Human-readable agent name. */
+  name: string;
+  /** Minimum auth level required to access this agent. */
   requiredAuthLevel?: number;
+  /** System instructions for the agent. */
   instructions?: string;
-  [key: string]: any;
+  /** Description shown to the parent assistant when deciding hand-offs. */
+  handoffDescription?: string;
+  /** Additional optional settings coming from YAML (ignored here). */
+  modelSettings?: Record<string, unknown>;
+  tools?: string[];
 }
 
 // Create assistant agent with dynamically created handoffs based on auth level
@@ -29,15 +39,15 @@ export function createAssistantAgent(context: Context) {
    */
   const childAgents: Array<{
     createAgent: (authLevel: number) => Agent;
-    config: AgentConfig & { name: string; handoffDescription?: string };
+    config: AgentConfig;
   }> = [
     {
       createAgent: createJokeAgent,
-      config: jokeConfig as AgentConfig & { name: string; handoffDescription?: string },
+      config: jokeConfig as AgentConfig,
     },
     {
       createAgent: createOrdersAgent,
-      config: ordersConfig as AgentConfig & { name: string; handoffDescription?: string },
+      config: ordersConfig as AgentConfig,
     },
   ];
 

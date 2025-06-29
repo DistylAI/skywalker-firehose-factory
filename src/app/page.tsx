@@ -29,6 +29,7 @@ type ChatMessage = {
 export default function Home() {
   const [activeTab, setActiveTab] = useState<Tab>(Tab.Chat);
 
+  const chat = useChat({ streamProtocol: 'text' });
   const {
     messages,
     input,
@@ -37,7 +38,7 @@ export default function Home() {
     status,
     stop,
     setMessages,
-  } = useChat({ streamProtocol: 'text' }) as any;
+  } = chat;
 
   // Ref to re-focus the input after submit
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -55,6 +56,9 @@ export default function Home() {
   
   // Auth level state
   const [authLevel, setAuthLevel] = useState<string>("0");
+
+  // Narrow the type of the chat messages to the subset used in this component.
+  const typedMessages = messages as unknown as ChatMessage[];
 
   const handleSubmitAndFocus = (e: React.SyntheticEvent) => {
     handleSubmit(
@@ -164,13 +168,13 @@ export default function Home() {
         <div className="flex flex-col flex-1 min-h-0">
           {/* Message list */}
           <ChatMessageList className="flex-1 px-6 py-6 space-y-6" smooth>
-            {messages.length === 0 ? (
+            {typedMessages.length === 0 ? (
               <div className="flex items-center justify-center h-full text-muted-foreground">
                 <p>Start a conversation...</p>
               </div>
             ) : (
               <>
-                {messages.map((m: ChatMessage) => {
+                {typedMessages.map((m) => {
                   // Combine all text parts into a single string for easier processing
                   const textContent = m.parts
                     .filter((p: { type: string; text: string }) => p.type === "text")
@@ -235,7 +239,7 @@ export default function Home() {
                     </ChatBubble>
                   );
                 })}
-                {status !== 'ready' && messages[messages.length - 1]?.role === 'user' && (
+                {status !== 'ready' && typedMessages[typedMessages.length - 1]?.role === 'user' && (
                   <ChatBubble variant="received">
                     <ChatBubbleMessage variant="received" isLoading={true} />
                   </ChatBubble>

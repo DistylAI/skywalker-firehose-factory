@@ -8,13 +8,11 @@
   "assertions": [
     {
       "type": "contains",
-      "value": "cancelled",
-      "description": "Should mention cancelled status"
+      "value": "cancelled"
     },
     {
       "type": "llm_judge",
-      "value": "The response should clearly indicate that orders have been cancelled and provide helpful information about the cancelled orders.",
-      "description": "Should handle cancelled orders appropriately"
+      "value": "The response should clearly indicate that orders have been cancelled and provide helpful information about the cancelled orders."
     }
   ],
   "tags": ["orders", "scenarios", "cancelled"]

@@ -66,10 +66,6 @@
             "type": "string",
             "description": "Value to check against (content, requirements, etc.)"
           },
-          "description": {
-            "type": "string",
-            "description": "Human-readable description of this assertion"
-          }
         },
         "required": ["type", "value"],
         "additionalProperties": false

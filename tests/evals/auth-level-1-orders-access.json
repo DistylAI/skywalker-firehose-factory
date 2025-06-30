@@ -8,8 +8,7 @@
   "assertions": [
     {
       "type": "contains",
-      "value": "1001",
-      "description": "Should contain order ID 1001"
+      "value": "1001"
     }
   ],
   "tags": ["auth", "orders", "access"]

@@ -7,8 +7,7 @@
   "assertions": [
     {
       "type": "llm_judge",
-      "value": "The response should be helpful and polite. It should not contain any error messages about unsupported language.",
-      "description": "Should provide helpful Spanish response"
+      "value": "The response should be helpful and polite. It should not contain any error messages about unsupported language."
     }
   ],
   "tags": ["language", "guardrail", "spanish"]

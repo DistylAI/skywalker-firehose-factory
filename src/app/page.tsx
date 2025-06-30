@@ -2,7 +2,7 @@
 
 import { useChat } from '@ai-sdk/react';
 import type React from 'react';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
 import { ArrowUp, ChevronDown, Square, RotateCcw } from "lucide-react";
 import { ChatMessageList } from "@/components/ui/chat/chat-message-list";
@@ -72,15 +72,30 @@ export default function Home() {
   };
 
   // Reset chat by clearing messages and re-focusing the input
-  const handleResetChat = () => {
+  const handleResetChat = useCallback(() => {
     if (status === 'streaming' || status === 'submitted') {
       stop();
     }
 
     setMessages([]);
 
+    // Refocus after clearing
     setTimeout(() => inputRef.current?.focus(), 0);
-  };
+  }, [status, stop, setMessages]);
+
+  // Add Command+R shortcut to reset chat without reloading the page
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      // On macOS, Meta key corresponds to the Command key
+      if (e.metaKey && (e.key === 'r' || e.key === 'R')) {
+        e.preventDefault();
+        handleResetChat();
+      }
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [handleResetChat]);
 
   return (
     <main className="flex flex-col h-screen max-w-4xl mx-auto bg-background">
@@ -109,50 +124,55 @@ export default function Home() {
             )}
             onClick={() => setActiveTab(Tab.Docs)}
           >
-            Documentation
+            Evals
           </button>
         </div>
 
         {activeTab === Tab.Chat && (
-          <div className="mt-4 flex gap-4">
-            <div className="flex flex-col gap-1 w-48">
-              <label htmlFor="scenario" className="text-sm font-medium text-foreground">
-                Scenario
-              </label>
-              <div className="relative">
-                <select
-                  id="scenario"
-                  name="scenario"
-                  value={scenario}
-                  onChange={(e) => setScenario(e.target.value)}
-                  className="appearance-none w-full border border-border rounded px-3 py-2 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary pr-8"
-                >
-                  {scenarios.map((s) => (
-                    <option key={s.value} value={s.value}>
-                      {s.label}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown className="absolute pointer-events-none right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <div className="mt-4">
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">
+              Context
+            </h3>
+            <div className="flex gap-4">
+              <div className="flex flex-col gap-1 w-48">
+                <label htmlFor="scenario" className="text-sm font-medium text-foreground">
+                  Scenario
+                </label>
+                <div className="relative">
+                  <select
+                    id="scenario"
+                    name="scenario"
+                    value={scenario}
+                    onChange={(e) => setScenario(e.target.value)}
+                    className="appearance-none w-full border border-border rounded px-3 py-2 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary pr-8"
+                  >
+                    {scenarios.map((s) => (
+                      <option key={s.value} value={s.value}>
+                        {s.label}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute pointer-events-none right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                </div>
               </div>
-            </div>
-            
-            <div className="flex flex-col gap-1 w-32">
-              <label htmlFor="auth_level" className="text-sm font-medium text-foreground">
-                Auth Level
-              </label>
-              <div className="relative">
-                <select
-                  id="auth_level"
-                  name="auth_level"
-                  value={authLevel}
-                  onChange={(e) => setAuthLevel(e.target.value)}
-                  className="appearance-none w-full border border-border rounded px-3 py-2 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary pr-8"
-                >
-                  <option value="0">0</option>
-                  <option value="1">1</option>
-                </select>
-                <ChevronDown className="absolute pointer-events-none right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              
+              <div className="flex flex-col gap-1 w-32">
+                <label htmlFor="auth_level" className="text-sm font-medium text-foreground">
+                  Auth Level
+                </label>
+                <div className="relative">
+                  <select
+                    id="auth_level"
+                    name="auth_level"
+                    value={authLevel}
+                    onChange={(e) => setAuthLevel(e.target.value)}
+                    className="appearance-none w-full border border-border rounded px-3 py-2 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary pr-8"
+                  >
+                    <option value="0">0</option>
+                    <option value="1">1</option>
+                  </select>
+                  <ChevronDown className="absolute pointer-events-none right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                </div>
               </div>
             </div>
           </div>
@@ -180,7 +200,6 @@ export default function Home() {
                     <ChatBubble
                       key={m.id}
                       variant={m.role === "user" ? "sent" : "received"}
-                      className="flex-col w-full md:max-w-[60%]"
                     >
                       <ChatBubbleMessage variant={m.role === "user" ? "sent" : "received"}>
                         {textContent}
@@ -359,41 +378,6 @@ function Documentation() {
 
   return (
     <div className="flex-1 overflow-y-auto p-6 space-y-6">
-      <div className="border border-border rounded-lg p-6 bg-card">
-        <h1 className="text-2xl font-bold mb-4">Test Evaluations</h1>
-        <p className="text-muted-foreground mb-4">
-          This page shows all the test evaluations used to validate the AI agent&apos;s behavior. 
-          Each evaluation tests specific scenarios and expected responses.
-        </p>
-        
-        {tags.length > 0 && (
-          <div className="mb-6">
-            <h3 className="font-medium mb-2">Filter by tags:</h3>
-            <div className="flex flex-wrap gap-2">
-              {tags.map(tag => (
-                <button
-                  key={tag}
-                  onClick={() => toggleTag(tag)}
-                  className={cn(
-                    "px-3 py-1 rounded-full text-sm transition-colors",
-                    selectedTags.includes(tag)
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-muted-foreground hover:bg-muted/80"
-                  )}
-                >
-                  {tag}
-                </button>
-              ))}
-            </div>
-            {selectedTags.length > 0 && (
-              <p className="text-sm text-muted-foreground mt-2">
-                Showing {filteredEvals.length} of {evals.length} evaluations
-              </p>
-            )}
-          </div>
-        )}
-      </div>
-
       {filteredEvals.map((evaluation, idx) => (
         <div key={idx} className="border border-border rounded-lg p-6 bg-card">
           <div className="flex items-start justify-between mb-3">
@@ -447,14 +431,12 @@ function Documentation() {
                     {evaluation.assertions.map((assertion, aIdx) => (
                       <li key={aIdx} className="text-sm">
                         <span className="inline-block w-2 h-2 bg-primary rounded-full mr-2"></span>
-                        {assertion.description || (
-                          <>
-                            <span className="font-mono text-xs bg-muted px-1 rounded mr-1">
-                              {assertion.type}
-                            </span>
-                            {assertion.value}
-                          </>
-                        )}
+                        <>
+                          <span className="font-mono text-xs bg-muted px-1 rounded mr-1">
+                            {assertion.type}
+                          </span>
+                          {assertion.value}
+                        </>
                       </li>
                     ))}
                   </ul>

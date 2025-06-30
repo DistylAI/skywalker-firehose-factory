@@ -14,6 +14,5 @@
       "type": "llm_judge",
       "value": "The response should clearly indicate that orders have been cancelled and provide helpful information about the cancelled orders."
     }
-  ],
-  "tags": ["orders", "scenarios", "cancelled"]
+  ]
 }

@@ -22,8 +22,7 @@
   "assertions": [
     {
       "type": "llm_judge",
-      "value": "The response should contain a joke as requested by the user."
+      "value": "The response should contain a joke"
     }
-  ],
-  "tags": ["multi-turn", "conversation", "orders", "off-topic", "redirect"]
+  ]
 }

@@ -103,7 +103,12 @@ export default function Home() {
       <header className="sticky top-0 z-10 border-b border-border bg-background px-6 py-4">
         <h1 className="text-xl font-semibold text-foreground">Skywalker Firehose Factory</h1>
 
-        <div className="mt-4 flex gap-8 text-sm font-medium">
+        <div
+          className={cn(
+            "mt-4 flex gap-8 text-sm font-medium",
+            activeTab === Tab.Chat && "border-b border-border pb-2",
+          )}
+        >
           <button
             className={cn(
               "border-b-2 pb-2 transition-colors cursor-pointer",
@@ -378,6 +383,29 @@ function Documentation() {
 
   return (
     <div className="flex-1 overflow-y-auto p-6 space-y-6">
+      {/* Tag filter */}
+      {tags.length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-4">
+          {tags.map((tag) => {
+            const isSelected = selectedTags.includes(tag);
+            return (
+              <button
+                key={tag}
+                type="button"
+                onClick={() => toggleTag(tag)}
+                className={cn(
+                  "text-xs px-2 py-1 rounded border transition-colors",
+                  isSelected
+                    ? "bg-primary text-primary-foreground border-primary hover:bg-primary/90"
+                    : "bg-muted text-muted-foreground border-border hover:bg-background",
+                )}
+              >
+                {tag}
+              </button>
+            );
+          })}
+        </div>
+      )}
       {filteredEvals.map((evaluation, idx) => (
         <div key={idx} className="border border-border rounded-lg p-6 bg-card">
           <div className="flex items-start justify-between mb-3">

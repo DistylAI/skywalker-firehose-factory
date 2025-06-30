@@ -10,6 +10,5 @@
       "type": "contains",
       "value": "1001"
     }
-  ],
-  "tags": ["auth", "orders", "access"]
+  ]
 }

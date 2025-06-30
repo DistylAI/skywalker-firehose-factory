@@ -10,6 +10,5 @@
       "type": "llm_judge",
       "value": "The response should be a short, humorous joke suitable for a general audience."
     }
-  ],
-  "tags": ["auth", "jokes", "access"]
+  ]
 }

@@ -14,6 +14,5 @@
       "type": "llm_judge",
       "value": "The response should provide tracking information and indicate that orders are currently in transit or being shipped."
     }
-  ],
-  "tags": ["orders", "scenarios", "intransit", "tracking"]
+  ]
 }

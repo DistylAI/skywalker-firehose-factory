@@ -10,6 +10,5 @@
       "type": "llm_judge",
       "value": "The response should contain an interesting fact about cats. It should be informative and suitable for general audiences."
     }
-  ],
-  "tags": ["auth", "cat-facts", "access"]
+  ]
 }

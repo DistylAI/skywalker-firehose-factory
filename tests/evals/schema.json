@@ -71,13 +71,6 @@
         "additionalProperties": false
       },
       "minItems": 1
-    },
-    "tags": {
-      "type": "array",
-      "description": "Tags for categorizing and filtering evaluations",
-      "items": {
-        "type": "string"
-      }
     }
   },
   "required": ["name", "input", "assertions"],

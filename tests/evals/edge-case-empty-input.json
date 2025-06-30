@@ -10,6 +10,5 @@
       "type": "llm_judge",
       "value": "The response should handle empty input gracefully by asking how the assistant can help or providing a helpful prompt. It should not crash or give an error."
     }
-  ],
-  "tags": ["edge-case", "robustness"]
+  ]
 }

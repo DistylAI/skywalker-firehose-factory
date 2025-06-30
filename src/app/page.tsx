@@ -13,7 +13,6 @@ import { ChatMessageList } from "@/components/ui/chat/chat-message-list";
 import { ChatBubble, ChatBubbleMessage } from "@/components/ui/chat/chat-bubble";
 import { ChatInput } from "@/components/ui/chat/chat-input";
 import { cn } from "@/lib/utils";
-import { OrderCard } from "@/components/ui/order-card";
 
 enum Tab {
   Chat = 'chat',
@@ -175,42 +174,10 @@ export default function Home() {
             ) : (
               <>
                 {typedMessages.map((m) => {
-                  // Combine all text parts into a single string for easier processing
+                  // Combine all text parts into a single string
                   const textContent = m.parts
                     .filter((p: { type: string; text: string }) => p.type === "text")
                     .map((p) => p.text)
-                    .join("\n");
-
-                  // Helper to parse a bullet line like "• Order 1001 — Lightsaber (Qty 1) — shipped"
-                  const parseOrderLine = (line: string) => {
-                    const orderRegex = /•\s*Order\s*(\d+)\s*—\s*([^–]+)\s*\(Qty\s*(\d+)\)\s*—\s*(.*)/i;
-                    const match = line.match(orderRegex);
-                    if (!match) return undefined;
-                    const [, id, item, quantity, status] = match;
-                    return {
-                      id,
-                      customer: "", // customer name is not provided in bullet line
-                      item: item.trim(),
-                      quantity: Number(quantity),
-                      status: status.trim(),
-                    } as const;
-                  };
-
-                  // Split lines and separate into bullet lines/orders and other content
-                  const lines = textContent.split(/\n+/);
-                  const orderLines = lines.filter((l: string) => l.trim().startsWith("•"));
-                  const orderCards = orderLines
-                    .map(parseOrderLine)
-                    .filter(Boolean) as Array<{
-                      id: string;
-                      customer: string;
-                      item: string;
-                      quantity: number;
-                      status: string;
-                    }>;
-
-                  const nonOrderText = lines
-                    .filter((l: string) => !l.trim().startsWith("•"))
                     .join("\n");
 
                   return (
@@ -219,23 +186,9 @@ export default function Home() {
                       variant={m.role === "user" ? "sent" : "received"}
                       className="flex-col"
                     >
-                      {nonOrderText && (
-                        <ChatBubbleMessage
-                          variant={
-                            m.role === "user" ? "sent" : "received"
-                          }
-                        >
-                          {nonOrderText}
-                        </ChatBubbleMessage>
-                      )}
-
-                      {orderCards.length > 0 && (
-                        <div className="flex flex-col gap-4 w-full">
-                          {orderCards.map((order) => (
-                            <OrderCard key={order.id} order={order} />
-                          ))}
-                        </div>
-                      )}
+                      <ChatBubbleMessage variant={m.role === "user" ? "sent" : "received"}>
+                        {textContent}
+                      </ChatBubbleMessage>
                     </ChatBubble>
                   );
                 })}

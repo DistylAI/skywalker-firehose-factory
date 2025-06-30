@@ -1,0 +1,15 @@
+{
+  "name": "Orders - Single Scenario",
+  "context": {
+    "scenario": "single",
+    "auth_level": "1"
+  },
+  "input": "Show me my orders",
+  "assertions": [
+    {
+      "type": "llm_judge",
+      "value": "The response should show order information in a clear, formatted way and indicate there is one order that has been shipped, including the shipping or delivery status in natural language.",
+      "description": "Should show order details with shipping status"
+    }
+  ]
+}

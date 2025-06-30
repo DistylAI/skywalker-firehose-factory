@@ -7,14 +7,24 @@ import config from './definitions/assistantAgent.yaml';
 import { sdkLanguageGuardrail } from '../guardrails/languageGuardrail';
 
 interface Context {
+  /** Authentication level provided by the client (e.g. "0", "1"). */
   auth_level?: string;
-  [key: string]: any;
+  /** Scenario identifier used by the demo UI (e.g. "default", "cancelled"). */
+  scenario?: string;
 }
 
 interface AgentConfig {
+  /** Human-readable agent name. */
+  name: string;
+  /** Minimum auth level required to access this agent. */
   requiredAuthLevel?: number;
+  /** System instructions for the agent. */
   instructions?: string;
-  [key: string]: any;
+  /** Description shown to the parent assistant when deciding hand-offs. */
+  handoffDescription?: string;
+  /** Additional optional settings coming from YAML (ignored here). */
+  modelSettings?: Record<string, unknown>;
+  tools?: string[];
 }
 
 // Create assistant agent with dynamically created handoffs based on auth level
@@ -29,15 +39,15 @@ export function createAssistantAgent(context: Context) {
    */
   const childAgents: Array<{
     createAgent: (authLevel: number) => Agent;
-    config: AgentConfig & { name: string; handoffDescription?: string };
+    config: AgentConfig;
   }> = [
     {
       createAgent: createJokeAgent,
-      config: jokeConfig as AgentConfig & { name: string; handoffDescription?: string },
+      config: jokeConfig as AgentConfig,
     },
     {
       createAgent: createOrdersAgent,
-      config: ordersConfig as AgentConfig & { name: string; handoffDescription?: string },
+      config: ordersConfig as AgentConfig,
     },
   ];
 
@@ -49,17 +59,13 @@ export function createAssistantAgent(context: Context) {
     handoffDescription?: string;
   }> = [];
 
-  // Iterate over the registry and compose hand-offs that match the user's auth level
   childAgents.forEach(({ createAgent, config: childConfig }) => {
     const requiredLevel = childConfig.requiredAuthLevel || 0;
 
     if (userAuthLevel >= requiredLevel) {
-      // User is authorised – enable hand-off
       handoffs.push(createAgent(userAuthLevel));
 
-      // Prefer a concise bullet if provided in the YAML (handoffDescription)
       if (childConfig.handoffDescription) {
-        // Extract the first bullet or sentence to keep instructions short
         const firstLine = childConfig.handoffDescription
           .split('\n')
           .find((line) => line.trim().startsWith('-'))?.trim();
@@ -73,7 +79,6 @@ export function createAssistantAgent(context: Context) {
         availableHandoffRules.push(`- **${childConfig.name} related request** → Hand off to the **"${childConfig.name}"**.`);
       }
     } else {
-      // Not authorised – store info so we can mention restriction later on
       unavailableAgents.push({
         name: childConfig.name,
         requiredAuthLevel: requiredLevel,
@@ -82,7 +87,6 @@ export function createAssistantAgent(context: Context) {
     }
   });
 
-  // Build the assistant instructions
   let instructions = `## Role\n\nYou are a helpful AI assistant ready to tackle a wide range of user requests.`;
 
   if (availableHandoffRules.length > 0) {
@@ -93,14 +97,12 @@ export function createAssistantAgent(context: Context) {
     instructions += `\n\n### Access Restrictions`;
 
     unavailableAgents.forEach(({ name, handoffDescription }) => {
-      // Attempt to craft a user-friendly topic description based on the first bullet of handoffDescription
       let topic = name;
       if (handoffDescription) {
         const firstBullet = handoffDescription
           .split('\n')
           .find((line) => line.trim().startsWith('-'));
         if (firstBullet) {
-          // Remove the leading dash for cleaner output
           topic = firstBullet.replace(/^-\s*/, '').trim();
         }
       }

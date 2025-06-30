@@ -1,0 +1,15 @@
+{
+  "name": "Language Guardrail - Italian Blocked",
+  "description": "Test that Italian input is blocked by the language guardrail",
+  "context": {
+    "scenario": "default",
+    "auth_level": "0"
+  },
+  "input": "Ciao, come stai oggi?",
+  "assertions": [
+    {
+      "type": "exact_match",
+      "value": "[[ error unsupported language ]]"
+    }
+  ]
+}

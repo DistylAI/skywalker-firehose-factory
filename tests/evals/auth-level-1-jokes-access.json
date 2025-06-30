@@ -1,0 +1,14 @@
+{
+  "name": "Auth Level 1 - Allow Jokes",
+  "context": {
+    "scenario": "default",
+    "auth_level": "1"
+  },
+  "input": "Tell me a joke",
+  "assertions": [
+    {
+      "type": "llm_judge",
+      "value": "The response should be a short, humorous joke suitable for a general audience."
+    }
+  ]
+}

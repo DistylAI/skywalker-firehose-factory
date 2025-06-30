@@ -1,4 +1,5 @@
 import './openai-polyfill';
+import '@/lib/openai'; // Ensure OpenAI client (with Portkey proxy & logging) is initialised early
 import { run, user as userMessage, assistant as assistantMessage } from '@openai/agents';
 import { NextRequest } from 'next/server';
 import { createAssistantAgent } from '@/agents/assistantAgent';
@@ -15,7 +16,7 @@ interface IncomingMessage {
 interface ChatRequestBody {
   messages?: IncomingMessage[];
   data?: {
-    context?: any;
+    context?: Record<string, unknown>;
   };
 }
 
@@ -49,11 +50,15 @@ export async function POST(req: NextRequest): Promise<Response> {
             controller.enqueue(chunk);
           }
         }
-      } catch (error: any) {
-        // Handle guardrail errors
-        if (error.constructor.name === 'InputGuardrailTripwireTriggered') {
-          // Get the error message from the guardrail output
-          const errorMessage = error.guardrailResults?.[0]?.output?.outputInfo?.errorMessage || '[[ error unsupported language ]]';
+      } catch (error: unknown) {
+        const err = error as {
+          constructor?: { name?: string };
+          guardrailResults?: Array<{ output?: { outputInfo?: { errorMessage?: string } } }>;
+        };
+
+        if (err?.constructor?.name === 'InputGuardrailTripwireTriggered') {
+          const errorMessage = err.guardrailResults?.[0]?.output?.outputInfo?.errorMessage ||
+            '[[ error unsupported language ]]';
           controller.enqueue(encoder.encode(errorMessage));
         } else {
           console.error('Stream error:', error);

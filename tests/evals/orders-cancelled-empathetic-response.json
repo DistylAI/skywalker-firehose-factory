@@ -1,0 +1,32 @@
+{
+  "name": "Orders - Empathetic Response for Cancelled Orders",
+  "description": "Test that the agent provides an empathetic, human-like response when showing cancelled orders, acknowledging the disappointment and offering helpful next steps rather than just listing orders robotically.",
+  "context": {
+    "scenario": "cancelled",
+    "auth_level": "1"
+  },
+  "input": "What are my orders?",
+  "assertions": [
+    {
+      "type": "llm_judge",
+      "value": "The response should be empathetic and acknowledge that having cancelled orders can be disappointing. It should sound natural and human-like, not robotic. The response should include the order details but also express understanding of the situation and offer helpful next steps or assistance. It should avoid generic phrases like 'Here are your recent orders:' and instead use more personalized, empathetic language.",
+      "description": "Response should be empathetic and human-like for cancelled orders"
+    },
+    {
+      "type": "contains",
+      "value": "Order 2001",
+      "description": "Should contain first cancelled order"
+    },
+    {
+      "type": "contains", 
+      "value": "Order 2002",
+      "description": "Should contain second cancelled order"
+    },
+    {
+      "type": "contains",
+      "value": "cancelled",
+      "description": "Should indicate orders are cancelled"
+    }
+  ],
+  "tags": ["orders", "cancelled", "empathy", "customer-service"]
+}

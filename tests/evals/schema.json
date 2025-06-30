@@ -1,0 +1,78 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Evaluation Definition Schema",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Human-readable name for the evaluation"
+    },
+    "context": {
+      "type": "object",
+      "description": "Context object passed to the agent",
+      "properties": {
+        "auth_level": {
+          "type": "string",
+          "description": "Authentication level (0 or 1)"
+        },
+        "scenario": {
+          "type": "string",
+          "description": "Test scenario (default, single, multiple, etc.)"
+        }
+      },
+      "additionalProperties": true
+    },
+    "input": {
+      "oneOf": [
+        {
+          "type": "string",
+          "description": "Single user prompt/message to send to the agent (backward compatibility)"
+        },
+        {
+          "type": "array",
+          "description": "Multi-turn conversation history with role-based messages",
+          "items": {
+            "type": "object",
+            "properties": {
+              "role": {
+                "type": "string",
+                "enum": ["user", "assistant"],
+                "description": "The role of the message sender"
+              },
+              "content": {
+                "type": "string",
+                "description": "The message content"
+              }
+            },
+            "required": ["role", "content"],
+            "additionalProperties": false
+          },
+          "minItems": 1
+        }
+      ]
+    },
+    "assertions": {
+      "type": "array",
+      "description": "List of assertions to check against the response",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["contains", "not_contains", "llm_judge", "exact_match", "regex"],
+            "description": "Type of assertion to perform"
+          },
+          "value": {
+            "type": "string",
+            "description": "Value to check against (content, requirements, etc.)"
+          },
+        },
+        "required": ["type", "value"],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    }
+  },
+  "required": ["name", "input", "assertions"],
+  "additionalProperties": false
+}

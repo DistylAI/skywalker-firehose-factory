@@ -1,0 +1,14 @@
+{
+  "name": "Orders - Cancelled Scenario",
+  "context": {
+    "scenario": "cancelled",
+    "auth_level": "1"
+  },
+  "input": "What's the status of my orders?",
+  "assertions": [
+    {
+      "type": "llm_judge",
+      "value": "The response should clearly indicate that orders have been cancelled and provide helpful information about the cancelled orders."
+    }
+  ]
+}

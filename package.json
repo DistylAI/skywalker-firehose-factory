@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "test": "vitest",
-    "evals": "vitest --run"
+    "evals": "vitest --run --config vitest.evals.config.ts",
+    "evals:json": "vitest --run --config vitest.evals.config.ts"
   },
   "dependencies": {
     "@ai-sdk/openai": "^1.3.22",

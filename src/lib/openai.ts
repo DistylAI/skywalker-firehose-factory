@@ -15,15 +15,16 @@ const portkeyApiKey = process.env.PORTKEY_API_KEY;
 
 let client: OpenAI;
 
-// Optional: log every underlying HTTP request. Enable by setting LOG_OPENAI=1.
-const loggingFetch = process.env.LOG_OPENAI === '1'
-  ? (url: RequestInfo | URL, init?: RequestInit) => {
-      // eslint-disable-next-line no-console
-      console.log('[OpenAI request]', url.toString());
-      // @ts-ignore global fetch
-      return fetch(url, init);
-    }
-  : undefined;
+// Lightweight fetch wrapper that logs every underlying HTTP request so we can
+// confirm the exact endpoint hit (Portkey vs. OpenAI). If you wish to silence
+// the logs, set the environment variable `LOG_OPENAI=0`.
+const loggingFetch = (url: RequestInfo | URL, init?: RequestInit) => {
+  if (process.env.LOG_OPENAI !== '0') {
+    console.log('[OpenAI request]', url.toString());
+  }
+  // @ts-expect-error -- global fetch is available in both Node 18+ and Edge runtime
+  return fetch(url, init);
+};
 
 const PORTKEY_GATEWAY_URL = 'https://api.portkey.ai/v1';
 
@@ -48,5 +49,15 @@ if (portkeyApiKey) {
 // that all uses of `@openai/agents` (e.g., assistantAgent, language guardrail)
 // automatically go through Portkey as well.
 setDefaultOpenAIClient(client);
+
+// Informative startup log so we can verify in both server runtime and tests
+// whether requests are going through Portkey or directly to OpenAI.
+if (typeof console !== 'undefined') {
+  if (portkeyApiKey) {
+    console.log('[OpenAI] Initialised with Portkey gateway:', PORTKEY_GATEWAY_URL, 'Provider:', process.env.PORTKEY_PROVIDER || 'openai');
+  } else {
+    console.log('[OpenAI] Initialised with direct OpenAI endpoint');
+  }
+}
 
 export default client; 

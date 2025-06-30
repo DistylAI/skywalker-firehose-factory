@@ -1,0 +1,15 @@
+{
+  "name": "Language Guardrail - Chinese Blocked",
+  "description": "Test that Chinese input is blocked by the language guardrail",
+  "context": {
+    "scenario": "default",
+    "auth_level": "0"
+  },
+  "input": "你今天好吗？",
+  "assertions": [
+    {
+      "type": "exact_match",
+      "value": "[[ error unsupported language ]]"
+    }
+  ]
+}

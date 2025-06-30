@@ -1,0 +1,14 @@
+{
+  "name": "Orders - In Transit Scenario",
+  "context": {
+    "scenario": "intransit",
+    "auth_level": "1"
+  },
+  "input": "Track my orders",
+  "assertions": [
+    {
+      "type": "llm_judge",
+      "value": "The response should provide tracking information and indicate that orders are currently in transit or being shipped."
+    }
+  ]
+}

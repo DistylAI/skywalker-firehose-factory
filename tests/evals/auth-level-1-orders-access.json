@@ -1,0 +1,14 @@
+{
+  "name": "Auth Level 1 - Allow Order Access",
+  "context": {
+    "scenario": "default",
+    "auth_level": "1"
+  },
+  "input": "Show me my orders",
+  "assertions": [
+    {
+      "type": "contains",
+      "value": "1001"
+    }
+  ]
+}

@@ -1,8 +1,8 @@
 import { detectLanguageExecute } from '../tools/executions/detectLanguageExecute';
-import { 
+import {
   type InputGuardrail,
   type InputGuardrailFunctionArgs,
-  type GuardrailFunctionOutput 
+  type GuardrailFunctionOutput,
 } from '@openai/agents';
 
 // Accepted language codes
@@ -50,41 +50,39 @@ export async function languageGuardrail(userInput: string): Promise<LanguageGuar
 export const sdkLanguageGuardrail: InputGuardrail = {
   name: 'language_guardrail',
   execute: async (args: InputGuardrailFunctionArgs): Promise<GuardrailFunctionOutput> => {
-    // Extract text from input
+    const rawInput = args.input;
     let inputText: string;
-    
-    if (typeof args.input === 'string') {
-      inputText = args.input;
+    if (typeof rawInput === 'string') {
+      inputText = rawInput;
     } else {
-      // Find the latest user message from ModelItem[]
-      const userMessages = args.input.filter(item => 
-        item.type === 'message' && item.role === 'user'
-      );
-      
-      if (userMessages.length === 0) {
-        // No user message found, allow through
+      const texts: string[] = [];
+
+      type MessageLike = {
+        type?: string;
+        role?: string;
+        content?: unknown;
+      };
+
+      for (const item of rawInput as MessageLike[]) {
+        if (item.type === 'message' && item.role === 'user') {
+          if (typeof item.content === 'string') {
+            texts.push(item.content);
+          } else if (Array.isArray(item.content)) {
+            for (const c of item.content) {
+              if (c.type === 'input_text' && typeof c.text === 'string') {
+                texts.push(c.text);
+              }
+            }
+          }
+        }
+      }
+      inputText = texts.join(' ').trim();
+      if (!inputText) {
+        // default fallback to unknown
         return {
           tripwireTriggered: false,
-          outputInfo: { detectedLanguage: 'unknown', isAllowed: true }
+          outputInfo: { detectedLanguage: 'unknown', isAllowed: true },
         };
-      }
-      
-      // Get the latest user message and extract text
-      const latestMessage = userMessages[userMessages.length - 1];
-      if (latestMessage.type === 'message' && latestMessage.role === 'user') {
-        if (typeof latestMessage.content === 'string') {
-          inputText = latestMessage.content;
-        } else if (Array.isArray(latestMessage.content)) {
-          // Find text content in the content array
-          const textContent = latestMessage.content.find(c => 
-            'text' in c && c.type === 'input_text'
-          );
-          inputText = textContent?.text || '';
-        } else {
-          inputText = '';
-        }
-      } else {
-        inputText = '';
       }
     }
     
@@ -93,17 +91,7 @@ export const sdkLanguageGuardrail: InputGuardrail = {
     
     return {
       tripwireTriggered: !result.isAllowed,
-      outputInfo: result
+      outputInfo: result,
     };
-  }
-};
-
-// For now, let's create a simpler decorator that can be used with agents
-// This will be enhanced once we understand the exact TypeScript API structure
-export function createLanguageGuardrail() {
-  return {
-    name: 'language_guardrail',
-    description: 'Validates that user input is in supported languages (English or Spanish)',
-    validate: languageGuardrail
-  };
-} 
+  },
+}; 

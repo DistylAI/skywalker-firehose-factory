@@ -64,7 +64,7 @@ export default async function getOrdersExecute(
       ];
       break;
 
-    case 'intranit':
+    case 'intransit':
       orders = [
         {
           id: '5001',

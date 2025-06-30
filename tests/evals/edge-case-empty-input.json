@@ -1,0 +1,16 @@
+{
+  "name": "Edge Case - Empty Input",
+  "context": {
+    "scenario": "default",
+    "auth_level": "0"
+  },
+  "input": "",
+  "assertions": [
+    {
+      "type": "llm_judge",
+      "value": "The response should handle empty input gracefully by asking how the assistant can help or providing a helpful prompt. It should not crash or give an error.",
+      "description": "Should handle empty input gracefully"
+    }
+  ],
+  "tags": ["edge-case", "robustness"]
+}

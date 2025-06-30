@@ -1,0 +1,26 @@
+{
+  "name": "Orders - Single Scenario",
+  "context": {
+    "scenario": "single",
+    "auth_level": "1"
+  },
+  "input": "Show me my orders",
+  "assertions": [
+    {
+      "type": "contains",
+      "value": "4001",
+      "description": "Should contain order ID 4001 from single scenario"
+    },
+    {
+      "type": "contains",
+      "value": "shipped",
+      "description": "Should show shipped status for single scenario"
+    },
+    {
+      "type": "llm_judge",
+      "value": "The response should show order information in a clear, formatted way and indicate there is one order that has been shipped.",
+      "description": "Should format single order information properly"
+    }
+  ],
+  "tags": ["orders", "scenarios", "single"]
+}

@@ -47,7 +47,7 @@ export default function Home() {
     { label: "Cancelled Orders", value: "cancelled" },
     { label: "Multiple Item Orders", value: "multiple" },
     { label: "Single Item Orders", value: "single" },
-    { label: "In-Transit Orders", value: "intranit" },
+    { label: "In-Transit Orders", value: "intransit" },
     { label: "Returned Orders", value: "returned" },
   ];
 

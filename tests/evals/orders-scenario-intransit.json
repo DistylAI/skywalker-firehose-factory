@@ -1,0 +1,21 @@
+{
+  "name": "Orders - In Transit Scenario",
+  "context": {
+    "scenario": "intransit",
+    "auth_level": "1"
+  },
+  "input": "Track my orders",
+  "assertions": [
+    {
+      "type": "regex",
+      "value": "(in.transit|transit|shipping)",
+      "description": "Should mention in-transit or shipping status"
+    },
+    {
+      "type": "llm_judge",
+      "value": "The response should provide tracking information and indicate that orders are currently in transit or being shipped.",
+      "description": "Should handle in-transit orders with tracking info"
+    }
+  ],
+  "tags": ["orders", "scenarios", "intransit", "tracking"]
+}

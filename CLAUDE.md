@@ -83,7 +83,7 @@ Test how components work together, especially:
 ### 3. End-to-End Tests
 Test complete user workflows with realistic scenarios:
 - Different authentication levels
-- Various data scenarios (`default`, `single`, `multiple`, `cancelled`, `returned`, `intranit`)
+- Various data scenarios (`default`, `single`, `multiple`, `cancelled`, `returned`, `intransit`)
 - Error conditions and edge cases
 
 ## Testing Patterns

@@ -23,8 +23,33 @@
       "additionalProperties": true
     },
     "input": {
-      "type": "string",
-      "description": "User prompt/message to send to the agent"
+      "oneOf": [
+        {
+          "type": "string",
+          "description": "Single user prompt/message to send to the agent (backward compatibility)"
+        },
+        {
+          "type": "array",
+          "description": "Multi-turn conversation history with role-based messages",
+          "items": {
+            "type": "object",
+            "properties": {
+              "role": {
+                "type": "string",
+                "enum": ["user", "assistant"],
+                "description": "The role of the message sender"
+              },
+              "content": {
+                "type": "string",
+                "description": "The message content"
+              }
+            },
+            "required": ["role", "content"],
+            "additionalProperties": false
+          },
+          "minItems": 1
+        }
+      ]
     },
     "assertions": {
       "type": "array",

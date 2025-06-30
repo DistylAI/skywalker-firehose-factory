@@ -43,6 +43,7 @@ This project uses **JSON-based evaluations** as the primary testing approach, no
 ### JSON Evaluation Schema
 Create test files in `tests/evals/` with this structure:
 
+#### Single-Turn Evaluation (Backward Compatible)
 ```json
 {
   "name": "Test Name - Brief Description",
@@ -62,6 +63,44 @@ Create test files in `tests/evals/` with this structure:
   "tags": ["category", "feature", "type"]  // Optional: for organizing tests
 }
 ```
+
+#### Multi-Turn Conversation Evaluation
+```json
+{
+  "name": "Multi-turn Test Name - Brief Description", 
+  "description": "Detailed description of what this multi-turn conversation test validates",
+  "context": {
+    "scenario": "default",        // or "single", "multiple", "cancelled", etc.
+    "authLevel": 1               // 0 or 1 for different permission levels
+  },
+  "input": [
+    {
+      "role": "user",
+      "content": "First user message"
+    },
+    {
+      "role": "assistant",
+      "content": "Expected or simulated assistant response"
+    },
+    {
+      "role": "user", 
+      "content": "Follow-up user message"
+    }
+  ],
+  "assertions": [
+    {
+      "type": "llm_judge",
+      "value": "The final response should demonstrate understanding of the conversation context and provide appropriate information based on the multi-turn dialogue.",
+      "description": "Should maintain conversation context across turns"
+    }
+  ],
+  "tags": ["multi-turn", "conversation", "feature"]
+}
+```
+
+**Note**: The `input` field now supports both:
+- **String**: Single user message (backward compatible with existing tests)
+- **Array**: Multi-turn conversation with role-based messages (`user` and `assistant`)
 
 ### Assertion Types Available
 1. **`llm_judge`** - Use LLM to evaluate response quality (preferred for AI responses)

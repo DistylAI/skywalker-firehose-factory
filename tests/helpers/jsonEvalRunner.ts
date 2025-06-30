@@ -1,15 +1,24 @@
 import { readFileSync, readdirSync } from 'fs';
 import { join } from 'path';
-import { run, user as userMessage } from '@openai/agents';
+import { run, user as userMessage, assistant as assistantMessage } from '@openai/agents';
 import { createAssistantAgent } from '../../src/agents/assistantAgent';
 import { llmJudge } from './llmJudge';
 import { z } from 'zod';
+
+// Schema for conversation message
+const ConversationMessageSchema = z.object({
+  role: z.enum(['user', 'assistant']),
+  content: z.string()
+});
 
 // Schema for eval definition validation
 const EvalDefinitionSchema = z.object({
   name: z.string(),
   context: z.record(z.any()).optional(),
-  input: z.string(),
+  input: z.union([
+    z.string(), // Backward compatibility - single user input
+    z.array(ConversationMessageSchema).min(1) // Multi-turn conversation
+  ]),
   assertions: z.array(z.object({
     type: z.enum(['contains', 'not_contains', 'llm_judge', 'exact_match', 'regex']),
     value: z.string(),
@@ -34,8 +43,24 @@ export interface EvalResult {
   tags?: string[];
 }
 
-export async function runAgentWithContext(context: any, prompt: string): Promise<string> {
-  const history = [userMessage(prompt)];
+export async function runAgentWithContext(context: any, input: string | Array<{role: 'user' | 'assistant', content: string}>): Promise<string> {
+  let history: any[];
+  
+  // Handle both single input (backward compatibility) and multi-turn conversation
+  if (typeof input === 'string') {
+    // Single user input - backward compatibility
+    history = [userMessage(input)];
+  } else {
+    // Multi-turn conversation - convert to agent message format
+    history = input.map(msg => {
+      if (msg.role === 'user') {
+        return userMessage(msg.content);
+      } else {
+        // For assistant messages, use the assistantMessage function
+        return assistantMessage(msg.content);
+      }
+    });
+  }
   
   // Create agent with the specific context
   const agent = createAssistantAgent(context);

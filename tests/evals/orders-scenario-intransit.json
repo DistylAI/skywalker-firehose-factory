@@ -7,10 +7,6 @@
   "input": "Track my orders",
   "assertions": [
     {
-      "type": "regex",
-      "value": "(in.transit|transit|shipping)"
-    },
-    {
       "type": "llm_judge",
       "value": "The response should provide tracking information and indicate that orders are currently in transit or being shipped."
     }

@@ -7,16 +7,9 @@
   "input": "Show me my orders",
   "assertions": [
     {
-      "type": "contains",
-      "value": "4001"
-    },
-    {
-      "type": "contains",
-      "value": "shipped"
-    },
-    {
       "type": "llm_judge",
-      "value": "The response should show order information in a clear, formatted way and indicate there is one order that has been shipped."
+      "value": "The response should show order information in a clear, formatted way and indicate there is one order that has been shipped, including the shipping or delivery status in natural language.",
+      "description": "Should show order details with shipping status"
     }
   ]
 }

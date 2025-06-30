@@ -12,7 +12,7 @@ interface ResponseWithText { output_text?: string }
 // Runtime-safe schema that also doubles as the JSON-schema we pass to the model
 const LanguageDetectionSchema = z.object({
   languageCode: z.string().min(2).max(8), // ISO-639-1 or "unknown"
-  reason: z.string().min(1).max(50),
+  reason: z.string().min(1).max(20),
 });
 
 export type LanguageDetection = z.infer<typeof LanguageDetectionSchema>;
@@ -30,8 +30,8 @@ const languageDetectionJsonSchema = {
     reason: { 
       type: 'string',
       minLength: 1,
-      maxLength: 50,
-      description: 'Short reasoning for the detection'
+      maxLength: 20,
+      description: 'Very short reason'
     }
   },
   required: ['languageCode', 'reason'],
@@ -51,9 +51,9 @@ export async function detectLanguageExecute(input: { text: string }) {
           schema: languageDetectionJsonSchema,
         },
       },
-      instructions: 'Detect the primary language and respond with JSON.',
+      instructions: 'Detect the primary language and respond with JSON. Keep the reason very short (max 20 chars).',
       input: input.text,
-      max_output_tokens: 150,
+      max_output_tokens: 100,
     });
 
     const rawContent = (response as ResponseWithText).output_text ?? '';

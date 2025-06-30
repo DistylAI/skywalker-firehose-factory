@@ -40,22 +40,43 @@ export async function runAgentWithContext(context: any, prompt: string): Promise
   // Create agent with the specific context
   const agent = createAssistantAgent(context);
   
-  const streamed = await run(agent, history, { 
-    stream: true,
-    context: context
-  });
-  
-  let response = '';
-  for await (const ev of streamed) {
-    if (
-      ev.type === 'raw_model_stream_event' &&
-      ev.data.type === 'output_text_delta'
-    ) {
-      response += ev.data.delta as string;
+  try {
+    const streamed = await run(agent, history, { 
+      stream: true,
+      context: context
+    });
+    
+    let response = '';
+    for await (const ev of streamed) {
+      if (
+        ev.type === 'raw_model_stream_event' &&
+        ev.data.type === 'output_text_delta'
+      ) {
+        response += ev.data.delta as string;
+      }
     }
+    
+    return response.trim();
+  } catch (error) {
+    // Handle guardrail exceptions
+    if (error instanceof Error && error.message.includes('Input guardrail triggered:')) {
+      // Extract the guardrail result from the error message
+      const match = error.message.match(/Input guardrail triggered: (.+)$/);
+      if (match) {
+        try {
+          const guardrailResult = JSON.parse(match[1]);
+          if (guardrailResult.errorMessage) {
+            return guardrailResult.errorMessage;
+          }
+        } catch (parseError) {
+          // If we can't parse the guardrail result, fall back to the raw error
+        }
+      }
+    }
+    
+    // Re-throw other errors
+    throw error;
   }
-  
-  return response.trim();
 }
 
 async function runAssertion(assertion: EvalDefinition['assertions'][0], response: string): Promise<{ passed: boolean; error?: string }> {

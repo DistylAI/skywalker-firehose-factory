@@ -33,10 +33,130 @@ npm run lint
 ```
 
 ### Test Structure
-- **Test files**: Located in `tests/` directory
-- **Framework**: Vitest with Node.js environment
-- **Config**: `vitest.config.ts` and `vitest.setup.ts`
-- **Pattern**: Files named `*.test.ts`
+This project uses **JSON-based evaluations** as the primary testing approach, not traditional Vitest unit tests.
+
+- **JSON Evaluation files**: Located in `tests/evals/` directory
+- **Framework**: Custom JSON evaluation runner via `tests/jsonEvals.test.ts`
+- **Pattern**: Files named `*.json` in `tests/evals/`
+- **Traditional unit tests**: Only used sparingly for isolated component testing
+
+### JSON Evaluation Schema
+Create test files in `tests/evals/` with this structure:
+
+```json
+{
+  "name": "Test Name - Brief Description",
+  "description": "Detailed description of what this test validates",
+  "context": {
+    "scenario": "default",        // or "single", "multiple", "cancelled", etc.
+    "authLevel": 0               // 0 or 1 for different permission levels
+  },
+  "input": "User input message to test",
+  "assertions": [
+    {
+      "type": "llm_judge",
+      "value": "The response should be helpful, polite, and in English. It should not contain error messages.",
+      "description": "Human-readable description of assertion"
+    }
+  ],
+  "tags": ["category", "feature", "type"]  // Optional: for organizing tests
+}
+```
+
+### Assertion Types Available
+1. **`llm_judge`** - Use LLM to evaluate response quality (preferred for AI responses)
+   ```json
+   {
+     "type": "llm_judge",
+     "value": "Response should be helpful and polite",
+     "description": "Validates tone and helpfulness"
+   }
+   ```
+
+2. **`exact_match`** - Exact string matching (for error messages, specific outputs)
+   ```json
+   {
+     "type": "exact_match", 
+     "value": "[[ error unsupported language ]]"
+   }
+   ```
+
+3. **`contains`** - Check if response contains specific text
+   ```json
+   {
+     "type": "contains",
+     "value": "order number"
+   }
+   ```
+
+4. **`not_contains`** - Check if response does NOT contain specific text
+   ```json
+   {
+     "type": "not_contains",
+     "value": "internal error"
+   }
+   ```
+
+5. **`regex`** - Regular expression matching
+   ```json
+   {
+     "type": "regex",
+     "value": "\\d{4}-\\d{2}-\\d{2}"
+   }
+   ```
+
+### Creating New Tests - Step by Step
+
+1. **Create JSON file** in `tests/evals/` with descriptive name:
+   ```bash
+   # Example: tests/evals/feature-name-scenario.json
+   ```
+
+2. **Follow naming convention**: `feature-behavior-condition.json`
+   - `language-guardrail-french-blocked.json`
+   - `auth-level0-deny-orders.json`
+   - `orders-cancelled-scenario.json`
+
+3. **Use appropriate assertion types**:
+   - **Use `llm_judge`** for natural language responses
+   - **Use `exact_match`** for specific error messages or deterministic outputs
+   - **Use `contains`** for checking presence of specific information
+
+4. **Test different scenarios**:
+   ```json
+   "context": {
+     "scenario": "default",     // Basic scenario
+     "scenario": "single",      // Single item scenario  
+     "scenario": "multiple",    // Multiple items scenario
+     "scenario": "cancelled",   // Cancelled order scenario
+     "scenario": "intransit",   // In-transit order scenario
+     "authLevel": 0            // Limited permissions
+     "authLevel": 1            // Full permissions
+   }
+   ```
+
+5. **Run the test**:
+   ```bash
+   npm run evals  # Runs all JSON evaluations
+   ```
+
+### Example Test Creation Workflow
+
+```bash
+# 1. Verify current state
+npm run evals
+
+# 2. Create new JSON evaluation file
+# File: tests/evals/my-new-feature-test.json
+
+# 3. Confirm test fails (if testing new behavior)
+npm run evals
+
+# 4. Implement the feature to make test pass
+
+# 5. Verify test now passes
+npm run evals
+```
 
 ## LLM Judge for Response Evaluation
 
@@ -124,21 +244,24 @@ const context = createContext('default'); // or 'single', 'multiple', etc.
 
 ## Test Writing Best Practices
 
-### Descriptive Test Names
-```typescript
-describe('Feature Name', () => {
-  describe('Expected Behavior Category', () => {
-    it('should perform specific action under specific conditions', async () => {
-      // Test implementation
-    });
-  });
-});
+### Descriptive Test Names for JSON Evaluations
+Use clear, descriptive names that explain what is being tested:
+
+```json
+{
+  "name": "Language Guardrail - French Blocked",
+  "name": "Auth Level 0 - Deny Order Access", 
+  "name": "Orders - Cancelled Scenario",
+  "name": "Edge Case - Empty Input"
+}
 ```
 
-### Test Structure
-1. **Arrange**: Set up test data and context
-2. **Act**: Execute the code being tested
-3. **Assert**: Verify the results (prefer llmJudge for AI responses)
+Follow the pattern: `[Feature] - [Expected Behavior] - [Condition]`
+
+### JSON Evaluation Test Structure
+1. **Context**: Set up test scenario and authentication level
+2. **Input**: Provide user message to test
+3. **Assertions**: Define what the response should contain/validate (prefer llm_judge for AI responses)
 
 ### Error Testing
 Always test error conditions:
@@ -189,10 +312,28 @@ npm run build && npm run lint
 ## Remember
 
 - **NO CHANGES** without corresponding tests
-- **USE LLM JUDGE** for AI response testing
+- **USE JSON EVALUATIONS** as the primary testing method (not Vitest unit tests)
+- **USE LLM JUDGE** for AI response testing in JSON evaluations
 - **VERIFY ALL TESTS PASS** before and after changes
 - **FOLLOW TDD CYCLE**: Red → Green → Refactor
 - **TEST AUTH LEVELS** and different scenarios
 - **RUN BUILD AND LINT** before considering work complete
+- **PREFER JSON EVALUATIONS** over traditional unit tests for most testing scenarios
 
 This disciplined approach ensures system reliability and prevents regressions as the AI system evolves.
+
+## JSON Evaluation vs Traditional Unit Tests
+
+**Use JSON Evaluations for:**
+- End-to-end agent behavior testing
+- Guardrail validation (blocking/allowing scenarios)
+- Natural language response quality
+- Authentication and authorization testing
+- Different data scenario testing
+- Most feature testing
+
+**Use Traditional Unit Tests (Vitest) only for:**
+- Isolated utility function testing
+- Complex data transformation logic
+- Performance-critical code paths
+- When JSON evaluations are insufficient

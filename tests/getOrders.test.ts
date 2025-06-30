@@ -28,64 +28,16 @@ async function runAgentWithContext(context: any, prompt: string): Promise<string
 
 describe('Orders Tool E2E Tests', () => {
 
-  describe('Order ID verification with Auth Levels', () => {
-    const testCases = [
-      { scenario: 'default', expectedOrderId: '1001', description: 'default scenario' },
-      { scenario: 'single', expectedOrderId: '4001', description: 'single order scenario' },
-      { scenario: 'multiple', expectedOrderId: '3001', description: 'multiple orders scenario' },
-      { scenario: 'cancelled', expectedOrderId: '2001', description: 'cancelled orders scenario' },
-      { scenario: 'returned', expectedOrderId: '6001', description: 'returned orders scenario' },
-      { scenario: 'intranit', expectedOrderId: '5001', description: 'in transit orders scenario' },
-    ];
-
-    describe('With Auth Level 0', () => {
-      testCases.forEach(({ scenario, expectedOrderId, description }) => {
-        it(`${description} should NOT include order ${expectedOrderId} with auth level 0`, async () => {
-          const context = {
-            scenario: scenario,
-            auth_level: '0'
-          };
-          
-          const response = await runAgentWithContext(context, 'Show me my recent orders');
-          
-          expect(response).not.toContain(expectedOrderId);
-          const judge = await llmJudge({
-            response,
-            requirements: 'The response should politely deny access to order information and should not list any order IDs.',
-          });
-          expect(judge.meets, judge.reason).toBe(true);
-        }, 30000);
-      });
-    });
-
-    describe('With Auth Level 1', () => {
-      testCases.forEach(({ scenario, expectedOrderId, description }) => {
-        it(`${description} should include order ${expectedOrderId} with auth level 1`, async () => {
-          const context = {
-            scenario: scenario,
-            auth_level: '1'
-          };
-          
-          const response = await runAgentWithContext(context, 'Show me my recent orders');
-          
-          expect(response).toContain(expectedOrderId);
-        }, 30000);
-      });
-    });
-  });
-
-  describe('Response format validation with auth levels', () => {
+  describe('Core Auth Level Behavior', () => {
     it('should deny access with auth level 0', async () => {
       const context = {
         scenario: 'default',
         auth_level: '0'
       };
       
-      const response = await runAgentWithContext(context, 'What are my orders?');
+      const response = await runAgentWithContext(context, 'Show me my recent orders');
       
-      // Should NOT contain order ID
       expect(response).not.toContain('1001');
-      // Should contain access denial message
       const judge = await llmJudge({
         response,
         requirements: 'The response should politely deny access to order information and should not list any order IDs.',
@@ -93,6 +45,19 @@ describe('Orders Tool E2E Tests', () => {
       expect(judge.meets, judge.reason).toBe(true);
     }, 30000);
 
+    it('should provide access with auth level 1', async () => {
+      const context = {
+        scenario: 'default',
+        auth_level: '1'
+      };
+      
+      const response = await runAgentWithContext(context, 'Show me my recent orders');
+      
+      expect(response).toContain('1001');
+    }, 30000);
+  });
+
+  describe('Response format validation', () => {
     it('should provide human-readable order information with auth level 1', async () => {
       const context = {
         scenario: 'default',

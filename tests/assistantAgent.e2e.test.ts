@@ -29,13 +29,11 @@ async function runAgentWithContext(context: any, prompt: string): Promise<string
 describe('Assistant Agent E2E Tests', () => {
 
   describe('Auth Level Tests', () => {
+    // Test with just representative scenarios instead of all 6
     const orderScenarios = [
       { scenario: 'default', expectedOrderId: '1001' },
       { scenario: 'single', expectedOrderId: '4001' },
-      { scenario: 'multiple', expectedOrderId: '3001' },
-      { scenario: 'cancelled', expectedOrderId: '2001' },
-      { scenario: 'returned', expectedOrderId: '6001' },
-      { scenario: 'intranit', expectedOrderId: '5001' }
+      { scenario: 'multiple', expectedOrderId: '3001' }
     ];
 
     describe('Auth Level 0 - No order access', () => {

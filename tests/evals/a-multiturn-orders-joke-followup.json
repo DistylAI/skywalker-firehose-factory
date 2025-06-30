@@ -3,7 +3,7 @@
   "description": "Tests agent's ability to handle a legitimate orders query followed by an off-topic joke request in a multi-turn conversation",
   "context": {
     "scenario": "default",
-    "authLevel": 1
+    "auth_level": "1"
   },
   "input": [
     {

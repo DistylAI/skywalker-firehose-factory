@@ -56,8 +56,8 @@ const chatBubbleMessageVariants = cva("p-4", {
   variants: {
     variant: {
       received:
-        "bg-secondary text-secondary-foreground rounded-r-lg rounded-tl-lg",
-      sent: "bg-primary text-primary-foreground rounded-l-lg rounded-tr-lg",
+        "bg-gray-100 text-black rounded-r-lg rounded-tl-lg",
+      sent: "bg-black text-white rounded-l-lg rounded-tr-lg",
     },
     layout: {
       default: "",
@@ -86,8 +86,14 @@ const ChatBubbleMessage = React.forwardRef<
   ) => (
     <div
       className={cn(
-        chatBubbleMessageVariants({ variant, layout, className }),
+        "relative", // ensure positioning context for pseudo-elements
         "break-words max-w-full whitespace-pre-wrap",
+        chatBubbleMessageVariants({ variant, layout, className }),
+        // Add small tails for a classic chat-bubble look (only on default layout)
+        layout !== "ai" &&
+          (variant === "received"
+            ? "before:content-[''] before:absolute before:-left-1 before:bottom-2 before:h-3 before:w-3 before:bg-gray-100 before:rotate-45 before:rounded-br-sm"
+            : "after:content-[''] after:absolute after:-right-1 after:bottom-2 after:h-3 after:w-3 after:bg-black after:rotate-45 after:rounded-bl-sm"),
       )}
       ref={ref}
       {...props}

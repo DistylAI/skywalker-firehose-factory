@@ -3,10 +3,6 @@
 import { useChat } from '@ai-sdk/react';
 import type React from 'react';
 import { useState, useRef, useEffect } from 'react';
-import ReactMarkdown from 'react-markdown';
-import assistantConfig from '@/agents/definitions/assistantAgent.yaml';
-import ordersConfig from '@/agents/definitions/ordersAgent.yaml';
-import jokeConfig from '@/agents/definitions/jokeAgent.yaml';
 import { Button } from "@/components/ui/button";
 import { ArrowUp, ChevronDown, Square, RotateCcw } from "lucide-react";
 import { ChatMessageList } from "@/components/ui/chat/chat-message-list";
@@ -184,7 +180,7 @@ export default function Home() {
                     <ChatBubble
                       key={m.id}
                       variant={m.role === "user" ? "sent" : "received"}
-                      className="flex-col"
+                      className="flex-col w-full md:max-w-[60%]"
                     >
                       <ChatBubbleMessage variant={m.role === "user" ? "sent" : "received"}>
                         {textContent}
@@ -250,138 +246,228 @@ export default function Home() {
 }
 
 function Documentation() {
-  const docs = [
-    { title: 'Assistant', data: assistantConfig },
-    { title: 'Orders Agent', data: ordersConfig },
-    { title: 'Joke Agent', data: jokeConfig },
-  ];
-
-  const [tools, setTools] = useState<Array<{
+  const [evals, setEvals] = useState<Array<{
     name: string;
     description?: string;
-    parameters?: unknown;
-    execution?: string | null;
+    context?: {
+      scenario?: string;
+      auth_level?: string;
+      authLevel?: number;
+    };
+    input: string | Array<{role: string; content: string}>;
+    assertions?: Array<{
+      type: string;
+      value: string;
+      description?: string;
+    }>;
+    tags?: string[];
   }>>([]);
 
+  const [tags, setTags] = useState<string[]>([]);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+
   useEffect(() => {
-    fetch('/api/docs/tools')
+    // Load all evals
+    fetch('/api/evals?action=list')
       .then((res) => res.json())
-      .then((data) => setTools(data))
+      .then((data) => {
+        if (data.success) {
+          setEvals(data.data);
+        }
+      })
+      .catch(() => {
+        /* noop */
+      });
+
+    // Load available tags
+    fetch('/api/evals?action=tags')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          setTags(data.data);
+        }
+      })
       .catch(() => {
         /* noop */
       });
   }, []);
 
-  const renderKeyValue = (value: unknown): React.ReactNode => {
-    if (Array.isArray(value)) {
+  const filteredEvals = selectedTags.length > 0 
+    ? evals.filter(e => e.tags?.some(tag => selectedTags.includes(tag)))
+    : evals;
+
+  const toggleTag = (tag: string) => {
+    setSelectedTags(prev => 
+      prev.includes(tag) 
+        ? prev.filter(t => t !== tag)
+        : [...prev, tag]
+    );
+  };
+
+  // Render the test input using the same chat bubbles as the main chat UI
+  const renderInput = (input: string | Array<{role: string; content: string}>) => {
+    // Helper to map role ➝ bubble variant
+    const getVariant = (role: string) => (role === 'user' ? 'sent' : 'received');
+
+    if (typeof input === 'string') {
       return (
-        <ul className="list-disc list-inside">
-          {value.map((item, idx) => (
-            <li key={idx}>{renderKeyValue(item)}</li>
-          ))}
-        </ul>
+        <div className="flex flex-col items-end w-full">
+          <ChatBubble variant="sent" className="flex-col">
+            <ChatBubbleMessage variant="sent">{input}</ChatBubbleMessage>
+          </ChatBubble>
+        </div>
       );
     }
 
-    if (value && typeof value === 'object') {
-      return (
-        <dl className="space-y-1">
-          {Object.entries(value).map(([k, v]) => (
-            <div key={k} className="flex flex-col sm:flex-row sm:items-baseline gap-1">
-              <dt className="font-medium text-foreground sm:w-40 shrink-0">
-                {k}
-              </dt>
-              <dd className="text-muted-foreground break-words flex-1">
-                {renderKeyValue(v) as React.ReactNode}
-              </dd>
-            </div>
-          ))}
-        </dl>
-      );
-    }
+    return (
+      <div className="flex flex-col gap-3">
+        {input.map((msg, idx) => (
+          <ChatBubble key={idx} variant={getVariant(msg.role)} className="flex-col">
+            <ChatBubbleMessage variant={getVariant(msg.role)}>
+              {msg.content}
+            </ChatBubbleMessage>
+          </ChatBubble>
+        ))}
+      </div>
+    );
+  };
 
-    return String(value) as React.ReactNode;
+  // Reusable section with consistent heading style
+  const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
+    <div>
+      <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">
+        {title}
+      </h3>
+      {children}
+    </div>
+  );
+
+  const getScenarioDisplay = (context?: { scenario?: string; auth_level?: string; authLevel?: number }) => {
+    if (!context) return null;
+    
+    const parts = [];
+    if (context.scenario && context.scenario !== 'default') {
+      parts.push(`${context.scenario} scenario`);
+    }
+    if (context.auth_level || context.authLevel !== undefined) {
+      const authLevel = context.auth_level || context.authLevel;
+      parts.push(`auth level ${authLevel}`);
+    }
+    
+    return parts.length > 0 ? parts.join(', ') : null;
   };
 
   return (
-    <div className="flex-1 overflow-y-auto space-y-6">
-      {docs.map(({ title, data }) => {
-        const {
-          instructions,
-          handoffDescription,
-          tools: agentTools,
-          ...rest
-        } = data as unknown as Record<string, unknown>;
-
-        const instructionsStr = instructions ? String(instructions) : '';
-        const handoffStr = handoffDescription ? String(handoffDescription) : '';
-        const hasRest = Object.keys(rest).length > 0;
-
-        return (
-          <div
-            key={title}
-            className="border border-border rounded-lg p-6 bg-card"
-          >
-            <h2 className="text-xl font-semibold mb-4">{title}</h2>
-
-            {instructionsStr && (
-              <div className="mb-4 prose max-w-none">
-                <ReactMarkdown>{instructionsStr}</ReactMarkdown>
-              </div>
+    <div className="flex-1 overflow-y-auto p-6 space-y-6">
+      <div className="border border-border rounded-lg p-6 bg-card">
+        <h1 className="text-2xl font-bold mb-4">Test Evaluations</h1>
+        <p className="text-muted-foreground mb-4">
+          This page shows all the test evaluations used to validate the AI agent&apos;s behavior. 
+          Each evaluation tests specific scenarios and expected responses.
+        </p>
+        
+        {tags.length > 0 && (
+          <div className="mb-6">
+            <h3 className="font-medium mb-2">Filter by tags:</h3>
+            <div className="flex flex-wrap gap-2">
+              {tags.map(tag => (
+                <button
+                  key={tag}
+                  onClick={() => toggleTag(tag)}
+                  className={cn(
+                    "px-3 py-1 rounded-full text-sm transition-colors",
+                    selectedTags.includes(tag)
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-muted-foreground hover:bg-muted/80"
+                  )}
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
+            {selectedTags.length > 0 && (
+              <p className="text-sm text-muted-foreground mt-2">
+                Showing {filteredEvals.length} of {evals.length} evaluations
+              </p>
             )}
+          </div>
+        )}
+      </div>
 
-            {handoffStr && (
-              <div className="mb-4 prose max-w-none">
-                <ReactMarkdown>{handoffStr}</ReactMarkdown>
-              </div>
-            )}
-
-            {Array.isArray(agentTools) && agentTools.length > 0 && (
-              <div className="mb-4">
-                <h3 className="font-medium mb-1">Tools</h3>
-                {renderKeyValue(agentTools)}
-              </div>
-            )}
-
-            {hasRest && (
-              <div className="mt-4 space-y-2">
-                <h3 className="font-medium mb-1">Additional Settings</h3>
-                {renderKeyValue(rest)}
+      {filteredEvals.map((evaluation, idx) => (
+        <div key={idx} className="border border-border rounded-lg p-6 bg-card">
+          <div className="flex items-start justify-between mb-3">
+            <h2 className="text-lg font-semibold">{evaluation.name}</h2>
+            {evaluation.tags && evaluation.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1">
+                {evaluation.tags.map(tag => (
+                  <span key={tag} className="px-2 py-1 bg-muted text-muted-foreground text-xs rounded">
+                    {tag}
+                  </span>
+                ))}
               </div>
             )}
           </div>
-        );
-      })}
 
-      {tools.length > 0 && (
-        <div className="space-y-6">
-          {tools.map((tool) => (
-            <div
-              key={tool.name}
-              className="border border-border rounded-lg p-6 bg-card"
-            >
-              <h2 className="text-xl font-semibold mb-4">Tool: {tool.name}</h2>
-              {tool.description && (
-                <p className="mb-4 text-muted-foreground">{tool.description}</p>
-              )}
-              {tool.parameters != null && (
-                <div className="mb-4">
-                  <h3 className="font-medium mb-1">Parameters (JSON Schema)</h3>
-                  <pre className="whitespace-pre-wrap bg-white p-3 rounded text-sm overflow-x-auto text-gray-800">
-                    {JSON.stringify(tool.parameters, null, 2)}
-                  </pre>
-                </div>
-              )}
-              {tool.execution && (
-                <div className="mb-4">
-                  <h3 className="font-medium mb-1">Execution Function Source</h3>
-                  <pre className="whitespace-pre-wrap bg-white p-3 rounded text-sm overflow-x-auto text-gray-800">
-                    {tool.execution}
-                  </pre>
-                </div>
+          {evaluation.description && (
+            <p className="text-muted-foreground mb-3">{evaluation.description}</p>
+          )}
+
+          {/*
+            Use a responsive grid: on medium screens and above show two columns.
+            The left column is reserved for context information (fixed min width),
+            while the right column stacks the Input and Expected Behavior sections.
+          */}
+          <div
+            className={cn(
+              "grid gap-6",
+              evaluation.context && getScenarioDisplay(evaluation.context)
+                ? "md:grid-cols-[200px_1fr]"
+                : ""
+            )}
+          >
+            {/* Context column (only rendered if available) */}
+            {evaluation.context && getScenarioDisplay(evaluation.context) && (
+              <Section title="Context">
+                <span className="text-sm text-muted-foreground capitalize">
+                  {getScenarioDisplay(evaluation.context)}
+                </span>
+              </Section>
+            )}
+
+            {/* Right column – Input followed by Expected Behavior */}
+            <div className="space-y-6">
+              <Section title="Input">
+                {renderInput(evaluation.input)}
+              </Section>
+
+              {evaluation.assertions && evaluation.assertions.length > 0 && (
+                <Section title="Expected Behavior">
+                  <ul className="space-y-1">
+                    {evaluation.assertions.map((assertion, aIdx) => (
+                      <li key={aIdx} className="text-sm">
+                        <span className="inline-block w-2 h-2 bg-primary rounded-full mr-2"></span>
+                        {assertion.description || (
+                          <>
+                            <span className="font-mono text-xs bg-muted px-1 rounded mr-1">
+                              {assertion.type}
+                            </span>
+                            {assertion.value}
+                          </>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </Section>
               )}
             </div>
-          ))}
+          </div>
+        </div>
+      ))}
+
+      {filteredEvals.length === 0 && evals.length > 0 && (
+        <div className="text-center text-muted-foreground py-8">
+          No evaluations match the selected tags.
         </div>
       )}
     </div>

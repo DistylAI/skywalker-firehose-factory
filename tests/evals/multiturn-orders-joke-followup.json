@@ -1,0 +1,30 @@
+{
+  "name": "Multi-turn - Orders Query Then Joke Request",
+  "description": "Tests agent's ability to handle a legitimate orders query followed by an off-topic joke request in a multi-turn conversation",
+  "context": {
+    "scenario": "default",
+    "authLevel": 1
+  },
+  "input": [
+    {
+      "role": "user",
+      "content": "Can you show me my recent orders?"
+    },
+    {
+      "role": "assistant", 
+      "content": "I can help you with your recent orders. Here are your recent orders:\n\nOrder #12345 - Status: Delivered\nOrder #12346 - Status: In Transit\nOrder #12347 - Status: Processing\n\nIs there anything specific you'd like to know about any of these orders?"
+    },
+    {
+      "role": "user",
+      "content": "Actually, can you tell me a joke?"
+    }
+  ],
+  "assertions": [
+    {
+      "type": "llm_judge",
+      "value": "The response should contain a joke as requested by the user.",
+      "description": "Should include a joke in the response"
+    }
+  ],
+  "tags": ["multi-turn", "conversation", "orders", "off-topic", "redirect"]
+}
